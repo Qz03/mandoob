@@ -383,21 +383,23 @@ async function loadMe() {
   try {
     const r = await api('me');
     const live = r.month.ok + r.month.pending;
-    $('#hero').innerHTML = `${ring(r.today, r.dayTarget)}
+    const dayTarget = r.dayTarget || 24, weekTarget = r.weekTarget || 168;
+    const board = r.board || [], recent = r.recent || [];
+    $('#hero').innerHTML = `${ring(r.today, dayTarget)}
       <div class="info"><h2>${r.today ? 'ماشي بشكل حلو' : 'ابدأ شغلك اليوم'}</h2>
-      <div class="pills"><span class="pill">الأسبوع <b>${num(r.week)}</b> من ${num(r.weekTarget)}</span>
-      <span class="pill">المركز <b>#${num(r.rank || '–')}</b> من ${num(r.agentsCount)}</span></div>
-      <span class="muted">الهدف اليومي ${num(r.dayTarget)} محل</span></div>`;
+      <div class="pills"><span class="pill">الأسبوع <b>${num(r.week)}</b> من ${num(weekTarget)}</span>
+      ${r.rank ? `<span class="pill">المركز <b>#${num(r.rank)}</b> من ${num(r.agentsCount)}</span>` : ''}</div>
+      <span class="muted">الهدف اليومي ${num(dayTarget)} محل</span></div>`;
     $('#stats').innerHTML = `
       <div class="stat"><b>${num(r.today)}</b><span>اليوم</span></div>
       <div class="stat"><b>${num(r.week)}</b><span>الأسبوع</span></div>
       <div class="stat"><b>${num(live)}</b><span>الشهر (${num(r.month.ok)} مقبول)</span></div>`;
-    $('#board').innerHTML = r.board.length ? r.board.map((b, i) => `<div class="item">
+    $('#board').innerHTML = board.length ? board.map((b, i) => `<div class="item">
         <span class="rank ${b.me ? 'me' : ''}">${i + 1}</span>
         <div class="grow"><div class="t">${esc(b.name)}${b.me ? ' <span class="muted">(أنت)</span>' : ''}</div></div>
         <b style="font-variant-numeric:tabular-nums">${num(b.count)}</b></div>`).join('')
       : '<p class="muted">ماكو تسجيلات اليوم بعد.</p>';
-    $('#recent').innerHTML = r.recent.length ? r.recent.map(s => `<div class="item"><div class="grow">
+    $('#recent').innerHTML = recent.length ? recent.map(s => `<div class="item"><div class="grow">
         <div class="t">${esc(s.shopName)}</div>
         <div class="muted"><span class="ltr">${esc(s.serial)}</span> · ${fmtTime(s.ts)}</div>
         ${s.status === 'rejected' && s.note ? `<div class="muted">سبب الرفض: ${esc(s.note)}</div>` : ''}
