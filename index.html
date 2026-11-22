@@ -3,95 +3,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16150f">
+<meta name="theme-color" content="#0c0c0a">
 <title>متابعة المندوبين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-/* التخطيط: عمود واحد للموبايل، شريط علوي داكن ثابت، بطاقات هادئة، والأصفر للفعل الرئيسي فقط */
 :root{
-  --bg:#f6f5ef; --surface:#ffffff; --ink:#1b1a14; --muted:#6c6959; --line:#e2dfd1;
-  --bar:#16150f; --bar-ink:#f6f5ef; --accent:#ffd400; --accent-ink:#1b1a14;
-  --ok:#1f7a45; --ok-bg:#e2f3e8; --bad:#b3261e; --bad-bg:#fbe6e4; --wait:#8a6100; --wait-bg:#fff2c9;
+  --bg:#0c0c0a; --panel:#16160f; --panel2:#1e1e15; --line:#2b2a20;
+  --ink:#f5f3e8; --muted:#9d9a85; --accent:#ffd400; --accent-ink:#17150a;
+  --ok:#5fd394; --ok-bg:#15301f; --bad:#ff8a80; --bad-bg:#3a1a17; --wait:#ffd76a; --wait-bg:#3a2f0c;
   --font:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --r:18px;
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#12110c; --surface:#1d1c15; --ink:#f3f1e6; --muted:#a5a18d; --line:#34322a;
-  --bar:#000; --ok:#6fd598; --ok-bg:#16301f; --bad:#ff8a80; --bad-bg:#3a1a17; --wait:#ffd76a; --wait-bg:#3a2f0c;
-  color-scheme:dark;
-}}
 *{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:var(--font);font-size:16px;line-height:1.6;min-height:100vh;
+  background:radial-gradient(1200px 500px at 50% -10%,#2a2508 0%,transparent 60%),var(--bg)}
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
-h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
-.bar{position:sticky;top:0;z-index:20;background:var(--bar);color:var(--bar-ink);
-  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:10px}
-.bar h1{font-size:1.05rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar button{background:none;border:1px solid #55523f;color:var(--bar-ink);border-radius:8px;padding:4px 12px;cursor:pointer}
-.wrap{max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 96px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.card h2{font-size:1.05rem}
+h1,h2,h3{margin:0;line-height:1.3}
+a{color:var(--accent)}
+
+/* الشريط العلوي */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:12px 18px;
+  background:rgba(12,12,10,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;font-weight:700;flex:0 0 auto}
+.brand h1{font-size:1rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;color:var(--muted);font-size:.78rem;font-weight:400}
+.ghost{background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:.9rem}
+.ghost:hover{color:var(--ink);border-color:#4a4836}
+
+/* الحاوية */
+.wrap{max-width:900px;margin:0 auto;padding:18px 16px 120px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:1.02rem;font-weight:600}
 .muted{color:var(--muted);font-size:.9rem}
-label{display:flex;flex-direction:column;gap:4px;font-weight:500;font-size:.95rem}
-input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
-input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;font-weight:600;cursor:pointer;text-align:center}
+.ltr{direction:ltr;unicode-bidi:isolate}
+
+/* الحلقة والبطاقة الرئيسية */
+.hero{display:flex;align-items:center;gap:20px;padding:22px}
+.ring{position:relative;width:132px;height:132px;flex:0 0 auto}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--line)}
+.ring .bar{stroke:var(--accent);transition:stroke-dashoffset .8s ease;filter:drop-shadow(0 0 6px rgba(255,212,0,.35))}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num b{font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.ring .num span{color:var(--muted);font-size:.8rem;margin-top:4px}
+.hero .info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.hero .info h2{font-size:1.25rem}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.85rem;color:var(--muted)}
+.pill b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* الإحصائيات */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center}
+.stat b{display:block;font-size:1.6rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.82rem}
+
+/* القوائم والبطاقات */
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.item:first-child{border-top:0;padding-top:0}
+.item .grow{flex:1;min-width:0}
+.item .t{font-weight:600;overflow-wrap:anywhere}
+.rank{width:28px;height:28px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-size:.85rem;font-weight:700;flex:0 0 auto}
+.rank.me{background:var(--accent);color:var(--accent-ink)}
+.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.rejected{background:var(--bad-bg);color:var(--bad)}
+.chip.pending{background:var(--wait-bg);color:var(--wait)}
+.chip.off{background:var(--panel2);color:var(--muted)}
+
+/* الأزرار والحقول */
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:11px 16px;font-weight:600;cursor:pointer;text-align:center;color:var(--ink)}
+.btn:hover{border-color:#4a4836}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.big{padding:16px;font-size:1.1rem;border-radius:14px}
-.btn.ok{color:var(--ok);border-color:var(--ok)}
-.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ok{color:var(--ok);border-color:#2f6b4a}
+.btn.bad{color:var(--bad);border-color:#7a3a35}
+.btn.sm{padding:6px 12px;font-size:.88rem;border-radius:10px}
+.btn.big{padding:16px;font-size:1.1rem;border-radius:16px}
 .btn:disabled{opacity:.55;cursor:default}
-.btn.sm{padding:6px 12px;font-size:.9rem}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1 1 140px;min-width:0}
 .row>.fit{flex:0 0 auto}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-.stat b{display:block;font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
-.stat span{color:var(--muted);font-size:.85rem}
-.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
-.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.rejected{background:var(--bad-bg);color:var(--bad)}
-.chip.pending{background:var(--wait-bg);color:var(--wait)} .chip.off{background:var(--line);color:var(--muted)}
-.list{display:flex;flex-direction:column}
-.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.item .grow{flex:1;min-width:0}
-.item .t{font-weight:600;overflow-wrap:anywhere}
-.msg{border-radius:10px;padding:10px 12px;font-size:.95rem}
-.msg.err{background:var(--bad-bg);color:var(--bad)} .msg.good{background:var(--ok-bg);color:var(--ok)} .msg.warn{background:var(--wait-bg);color:var(--wait)}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.tabs button{flex:1 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
-.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.preview{width:100%;max-height:300px;object-fit:contain;border-radius:10px;background:var(--bg)}
-#map{height:320px;border-radius:12px;border:1px solid var(--line);z-index:1}
-.shop{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
-.shop:first-child{border-top:0}
-.shop img{width:120px;height:150px;object-fit:cover;border-radius:10px;background:var(--line);cursor:zoom-in}
-.shop .meta{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
-@media (max-width:420px){.shop{grid-template-columns:92px 1fr}.shop img{width:92px;height:120px}}
+label{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:.92rem;color:var(--muted)}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 13px;width:100%;min-width:0;color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.msg{border-radius:12px;padding:10px 13px;font-size:.93rem}
+.msg.err{background:var(--bad-bg);color:var(--bad)}
+.msg.good{background:var(--ok-bg);color:var(--ok)}
+.msg.warn{background:var(--wait-bg);color:var(--wait)}
+.preview{width:100%;max-height:300px;object-fit:contain;border-radius:12px;background:var(--bg)}
+.gps{font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:2px 10px;white-space:nowrap;color:var(--muted)}
+.gps.on{border-color:#2f6b4a;color:var(--ok)}
+.gps.offl{border-color:#7a3a35;color:var(--bad)}
+
+/* زر محل جديد الثابت */
+.fab{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;
+  max-width:560px;margin:0 auto;box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:1.1rem;padding:16px;border-radius:16px}
+
+/* النافذة السفلية للمحل الجديد */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:640px;max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);
+  border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet .head{display:flex;align-items:center;justify-content:space-between}
+
+/* الجداول والمسؤول */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.tabs button{flex:1 0 auto;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+#map{height:320px;border-radius:14px;border:1px solid var(--line);z-index:1}
+.shop{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.shop:first-child{border-top:0;padding-top:0}
+.shop img{width:120px;height:150px;object-fit:cover;border-radius:12px;background:var(--panel2);cursor:zoom-in}
+.shop .meta{display:flex;flex-direction:column;gap:5px;min-width:0;overflow-wrap:anywhere}
+@media (max-width:420px){.shop{grid-template-columns:92px 1fr}.shop img{width:92px;height:118px}}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
 th{color:var(--muted);font-size:.85rem;font-weight:600}
 .scroll{overflow-x:auto}
+
+/* الشاشات الكاملة */
 .overlay{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
 .overlay video,.overlay img.full{flex:1;min-height:0;width:100%;object-fit:contain}
 .overlay .foot{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));color:#fff;display:flex;gap:10px;align-items:center}
 .overlay .foot span{flex:1}
-.gps{font-size:.8rem;border:1px solid #55523f;border-radius:999px;padding:2px 10px;white-space:nowrap}
-.gps.on{border-color:#6fd598;color:#6fd598} .gps.offl{border-color:#ff8a80;color:#ff8a80}
-.center{max-width:420px;margin:8vh auto 0}
-.ltr{direction:ltr;unicode-bidi:isolate}
+.center{max-width:440px;margin:6vh auto 0;width:100%}
+.brandmark{display:flex;justify-content:center;margin-bottom:6px}
+.brandmark .logo{width:54px;height:54px;font-size:1.4rem;border-radius:16px}
 </style>
 </head>
 <body>
-<header class="bar">
-  <h1 id="title">متابعة المندوبين</h1>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">م</div>
+    <div style="min-width:0">
+      <h1 id="title">متابعة المندوبين</h1>
+      <small id="subtitle"></small>
+    </div>
+  </div>
   <span id="gps" class="gps" hidden>GPS</span>
-  <button id="logout" hidden>خروج</button>
+  <button id="logout" class="ghost" hidden>خروج</button>
 </header>
+
 <main class="wrap" id="app"><p class="muted">جاري التحميل…</p></main>
+
+<button id="fab" class="btn primary fab" hidden>+ محل جديد</button>
 
 <div class="overlay" id="scan" hidden>
   <video id="video" playsinline muted></video>
@@ -106,7 +168,7 @@ th{color:var(--muted);font-size:.85rem;font-weight:600}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 "use strict";
-// رابط الخادم: يا تكتبه هنا، يا ينحفظ من شاشة الربط، يا يجي ويّه رابط المندوبين (#s=...)
+// رابط الخادم: يا تكتبه هنا، يا ينحفظ من شاشة الربط، يا ييجي من رابط المندوبين (#s=...)
 const FIXED_API = "";
 const $ = (s, r = document) => r.querySelector(s);
 const app = $('#app');
@@ -117,7 +179,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
-const S = { token: store.get('token', ''), user: store.get('user', null), pos: null, queue: store.get('queue', []), timers: [] };
+const S = { token: store.get('token', ''), user: store.get('user', null), pos: null, queue: store.get('queue', []), timers: [], watch: null, flushing: false, lastQueueError: '' };
 const STATUS = { ok: 'مقبول', pending: 'بانتظار التدقيق', rejected: 'مرفوض' };
 const fmtTime = ts => new Date(ts).toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 const bagDay = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
@@ -129,7 +191,6 @@ function ago(ts) {
   if (m < 1440) return 'قبل ' + Math.round(m / 60) + ' ساعة';
   return 'قبل ' + Math.round(m / 1440) + ' يوم';
 }
-
 const b64e = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const b64d = t => { try { return decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/')))); } catch (e) { return ''; } };
 const okApi = u => /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.test(u) || /^\/api$/.test(u);
@@ -139,6 +200,7 @@ const okApi = u => /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.tes
   window.API_URL = FIXED_API || store.get('api', '');
 })();
 const shareLink = () => location.href.split('#')[0] + '#s=' + b64e(window.API_URL);
+
 class NetError extends Error {}
 async function api(action, data = {}) {
   let res;
@@ -149,7 +211,7 @@ async function api(action, data = {}) {
   let j;
   try { j = await res.json(); } catch (e) { throw new NetError('الخادم ما جاوب، حاول مرة ثانية'); }
   if (!j.ok) {
-    if (/انتهت الجلسة|موقوف/.test(j.error || '')) { signOut(); }
+    if (/انتهت الجلسة|موقوف/.test(j.error || '')) signOut();
     throw new Error(j.error || 'صار خطأ');
   }
   return j;
@@ -159,20 +221,24 @@ function signOut() {
   S.token = ''; S.user = null; store.del('token'); store.del('user');
   S.timers.forEach(clearInterval); S.timers = [];
   if (S.watch != null) { navigator.geolocation.clearWatch(S.watch); S.watch = null; }
-  $('#gps').hidden = true; $('#logout').hidden = true;
+  $('#gps').hidden = true; $('#logout').hidden = true; $('#fab').hidden = true; $('#subtitle').textContent = '';
+  closeSheet();
   viewLogin();
 }
 $('#logout').onclick = signOut;
-function msg(el, text, kind = 'err') { el.className = 'msg ' + kind; el.textContent = text; el.hidden = !text; }
+function msg(el, text, kind = 'err') { if (!el) return; el.className = 'msg ' + kind; el.textContent = text; el.hidden = !text; }
 async function busy(btn, fn) {
   const t = btn.textContent; btn.disabled = true; btn.textContent = 'لحظة…';
   try { return await fn(); } finally { btn.disabled = false; btn.textContent = t; }
 }
+function setHead(title, sub) { $('#title').textContent = title; $('#subtitle').textContent = sub || ''; }
 
 /* ================= البداية ================= */
 async function boot() {
   if (!window.API_URL) {
-    app.innerHTML = `<form class="card center" id="f"><h2>ربط الموقع بالخادم</h2>
+    setHead('متابعة المندوبين', 'ربط الخادم');
+    app.innerHTML = `<div class="brandmark"><div class="logo">م</div></div>
+      <form class="card center" id="f"><h2>ربط الموقع بالخادم</h2>
       <p class="muted">هذي الخطوة للمسؤول فقط ومرة وحدة. الصق رابط Web app من Google Apps Script (ينتهي بـ /exec). إذا إنت مندوب، اطلب من المسؤول رابط المندوبين.</p>
       <label>رابط الخادم<input id="api-url" class="ltr" required placeholder="https://script.google.com/macros/s/.../exec"></label>
       <div id="m" hidden></div><button class="btn primary">ربط</button></form>`;
@@ -194,29 +260,31 @@ async function boot() {
   }
 }
 function viewInit() {
-  $('#title').textContent = 'متابعة المندوبين';
-  app.innerHTML = `<form class="card center" id="f">
-    <h2>إنشاء حساب المسؤول</h2>
-    <p class="muted">هذي أول مرة ينفتح الموقع. سوّي حسابك كمسؤول، وبعدها تضيف المندوبين من لوحتك.</p>
-    <label>اسمك<input id="in-name" required autocomplete="name"></label>
-    <label>رقم موبايلك<input id="in-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
-    <label>رمز سري (4 إلى 8 أرقام)<input id="in-pin" required inputmode="numeric" type="password" minlength="4" maxlength="8"></label>
-    <div id="m" hidden></div>
-    <button class="btn primary">إنشاء الحساب</button></form>`;
+  setHead('متابعة المندوبين', 'إعداد أول مرة');
+  app.innerHTML = `<div class="brandmark"><div class="logo">م</div></div>
+    <form class="card center" id="f">
+      <h2>إنشاء حساب المسؤول</h2>
+      <p class="muted">هذي أول مرة ينفتح الموقع. سوّي حسابك كمسؤول، وبعدها تضيف المندوبين من لوحتك.</p>
+      <label>اسمك<input id="in-name" required autocomplete="name"></label>
+      <label>رقم موبايلك<input id="in-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
+      <label>رمز سري (4 إلى 8 أرقام)<input id="in-pin" required inputmode="numeric" type="password" minlength="4" maxlength="8"></label>
+      <div id="m" hidden></div>
+      <button class="btn primary">إنشاء الحساب</button></form>`;
   $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
     try { setSession(await api('init', { name: $('#in-name').value, phone: $('#in-phone').value, pin: $('#in-pin').value })); viewAdmin(); }
     catch (e) { msg($('#m'), e.message); }
   }); };
 }
 function viewLogin() {
-  $('#title').textContent = 'متابعة المندوبين';
-  app.innerHTML = `<form class="card center" id="f">
-    <h2>تسجيل الدخول</h2>
-    <label>رقم الموبايل<input id="lg-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX" autocomplete="username"></label>
-    <label>الرمز السري<input id="lg-pin" required inputmode="numeric" type="password" autocomplete="current-password"></label>
-    <div id="m" hidden></div>
-    <button class="btn primary">دخول</button>
-    <p class="muted">ما عندك رمز؟ اطلبه من المسؤول.</p></form>`;
+  setHead('متابعة المندوبين', 'تسجيل الدخول');
+  app.innerHTML = `<div class="brandmark"><div class="logo">م</div></div>
+    <form class="card center" id="f">
+      <h2>تسجيل الدخول</h2>
+      <label>رقم الموبايل<input id="lg-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX" autocomplete="username"></label>
+      <label>الرمز السري<input id="lg-pin" required inputmode="numeric" type="password" autocomplete="current-password"></label>
+      <div id="m" hidden></div>
+      <button class="btn primary">دخول</button>
+      <p class="muted">ما عندك رمز؟ اطلبه من المسؤول.</p></form>`;
   $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
     try { setSession(await api('login', { phone: $('#lg-phone').value, pin: $('#lg-pin').value })); boot(); }
     catch (e) { msg($('#m'), e.message); }
@@ -238,14 +306,13 @@ function startTracking() {
     S.pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), t: Date.now() };
     gpsPill(true, 'الموقع شغال');
     maybePing();
-  }, err => {
-    gpsPill(false, err.code === 1 ? 'اسمح بالموقع' : 'الموقع غير متوفر');
-  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
+  }, err => gpsPill(false, err.code === 1 ? 'اسمح بالموقع' : 'الموقع غير متوفر'),
+  { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
   S.timers.push(setInterval(maybePing, 60000));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) maybePing(); });
 }
 async function maybePing(force) {
-  if (!S.pos || !S.token || S.user.role === 'admin') return;
+  if (!S.pos || !S.token || !S.user || S.user.role === 'admin') return;
   const since = Date.now() - lastSent.t, moved = meters(lastSent, S.pos);
   // كل 5 دقايق إذا تحرك أكثر من 40 متر، أو كل 15 دقيقة حتى لو واقف
   if (!force && !(since > 15 * 60e3 || (since > 5 * 60e3 && moved > 40))) return;
@@ -273,22 +340,30 @@ async function setWake(on) {
 
 /* ================= شاشة المندوب ================= */
 let draft = null;
+function ring(today, target) {
+  const R = 56, C = 2 * Math.PI * R, pct = Math.min(1, target ? today / target : 0);
+  return `<div class="ring" aria-label="${num(today)} من ${num(target)}">
+    <svg viewBox="0 0 132 132"><circle class="track" cx="66" cy="66" r="${R}" fill="none" stroke-width="10"/>
+    <circle class="bar" cx="66" cy="66" r="${R}" fill="none" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - pct)).toFixed(1)}"/></svg>
+    <div class="num"><b>${num(today)}</b><span>من ${num(target)}</span></div></div>`;
+}
 function viewAgent() {
-  $('#title').textContent = S.user.name;
-  $('#logout').hidden = false;
+  setHead(S.user.name, 'مندوب ميداني');
+  $('#logout').hidden = false; $('#fab').hidden = false;
+  $('#fab').onclick = openSheet;
   app.innerHTML = `
-    <div class="stats" id="stats"><div class="stat"><b>–</b><span>اليوم</span></div><div class="stat"><b>–</b><span>هذا الأسبوع</span></div><div class="stat"><b>–</b><span>هذا الشهر</span></div></div>
+    <section class="card hero" id="hero"><div class="muted">جاري التحميل…</div></section>
+    <div class="stats" id="stats"></div>
     <div id="queue" hidden></div>
-    <button class="btn primary big" id="new">تسجيل محل جديد</button>
-    <section class="card" id="form" hidden></section>
+    <section class="card"><h2>المتصدرين اليوم</h2><div class="list" id="board"><p class="muted">جاري التحميل…</p></div></section>
     <section class="card"><h2>آخر المحلات</h2><div class="list" id="recent"><p class="muted">جاري التحميل…</p></div></section>
     <section class="card">
       <h2>مشاركة الموقع</h2>
       <p class="muted">موقعك ينرسل للمسؤول طول ما هذي الصفحة مفتوحة. إذا قفلت الموبايل أو طلعت من الصفحة يتوقف الإرسال، ويرجع من تفتحها.</p>
-      <div class="row"><button class="btn" id="here">دز موقعي هسه</button><button class="btn" id="wake">خلّي الشاشة شغالة</button></div>
+      <div class="row"><button class="btn" id="here">دز موقعي الحين</button><button class="btn" id="wake">خلّي الشاشة شغالة</button></div>
       <div id="locMsg" hidden></div>
     </section>`;
-  $('#new').onclick = openForm;
   $('#here').onclick = () => busy($('#here'), async () => {
     const p = await freshPos();
     if (!p) return msg($('#locMsg'), 'ما كدرنا نحدد موقعك. فعّل الموقع (GPS) واسمح للمتصفح.');
@@ -308,16 +383,26 @@ async function loadMe() {
   try {
     const r = await api('me');
     const live = r.month.ok + r.month.pending;
+    $('#hero').innerHTML = `${ring(r.today, r.dayTarget)}
+      <div class="info"><h2>${r.today ? 'ماشي بشكل حلو' : 'ابدأ شغلك اليوم'}</h2>
+      <div class="pills"><span class="pill">الأسبوع <b>${num(r.week)}</b> من ${num(r.weekTarget)}</span>
+      <span class="pill">المركز <b>#${num(r.rank || '–')}</b> من ${num(r.agentsCount)}</span></div>
+      <span class="muted">الهدف اليومي ${num(r.dayTarget)} محل</span></div>`;
     $('#stats').innerHTML = `
       <div class="stat"><b>${num(r.today)}</b><span>اليوم</span></div>
-      <div class="stat"><b>${num(r.week)}</b><span>الأسبوع من ${r.weekTarget}</span></div>
+      <div class="stat"><b>${num(r.week)}</b><span>الأسبوع</span></div>
       <div class="stat"><b>${num(live)}</b><span>الشهر (${num(r.month.ok)} مقبول)</span></div>`;
+    $('#board').innerHTML = r.board.length ? r.board.map((b, i) => `<div class="item">
+        <span class="rank ${b.me ? 'me' : ''}">${i + 1}</span>
+        <div class="grow"><div class="t">${esc(b.name)}${b.me ? ' <span class="muted">(أنت)</span>' : ''}</div></div>
+        <b style="font-variant-numeric:tabular-nums">${num(b.count)}</b></div>`).join('')
+      : '<p class="muted">ماكو تسجيلات اليوم بعد.</p>';
     $('#recent').innerHTML = r.recent.length ? r.recent.map(s => `<div class="item"><div class="grow">
         <div class="t">${esc(s.shopName)}</div>
         <div class="muted"><span class="ltr">${esc(s.serial)}</span> · ${fmtTime(s.ts)}</div>
         ${s.status === 'rejected' && s.note ? `<div class="muted">سبب الرفض: ${esc(s.note)}</div>` : ''}
-      </div><span class="chip ${s.status}">${STATUS[s.status] || s.status}</span></div>`).join('')
-      : '<p class="muted">بعد ما سجّلت أي محل. اضغط "تسجيل محل جديد" وابدأ.</p>';
+      </div><span class="chip ${esc(s.status)}">${STATUS[s.status] || esc(s.status)}</span></div>`).join('')
+      : '<p class="muted">بعد ما سجّلت أي محل. اضغط "+ محل جديد" وابدأ.</p>';
   } catch (e) { if (S.token) $('#recent').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
 }
 function renderQueue() {
@@ -333,7 +418,7 @@ async function flushQueue() {
   S.flushing = true;
   let sent = false;
   while (S.queue.length) {
-    try { await api('addShop', S.queue[0]); sent = true; }
+    try { await api('addShop', S.queue[0]); sent = true; S.lastQueueError = ''; }
     catch (e) { if (e instanceof NetError) break; S.lastQueueError = e.message; }
     S.queue.shift(); store.set('queue', S.queue);
   }
@@ -341,44 +426,51 @@ async function flushQueue() {
   if (sent) loadMe();
 }
 
-function openForm() {
+/* ---- نافذة المحل الجديد ---- */
+function openSheet() {
   draft = { qr: '', photo: '' };
-  $('#new').hidden = true;
-  const f = $('#form'); f.hidden = false;
-  f.innerHTML = `<h2>محل جديد</h2>
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg'; bg.id = 'sheetBg';
+  bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="محل جديد">
+    <div class="head"><h2>محل جديد</h2><button class="ghost" id="sh-x" type="button">إغلاق</button></div>
     <label>اسم المحل (مثل ما مكتوب بسوبر كي)<input id="sh-name" autocomplete="off"></label>
     <div class="row"><button class="btn" id="sh-scan" type="button">مسح باركود الستاند</button></div>
     <div id="sh-code" hidden></div>
     <label>الرقم التسلسلي فوق الباركود<input id="sh-serial" class="ltr" placeholder="uvb-325199" autocapitalize="off" autocomplete="off"></label>
-    <label class="btn" style="align-items:center">صوّر صورة التوثيق
+    <label class="btn" style="align-items:center;color:var(--ink)">صوّر صورة التوثيق
       <input id="sh-photo" type="file" accept="image/*" capture="environment" hidden></label>
     <p class="muted">موبايل صاحب المحل بوضع "أعمال" جنب الستاند، والرقم التسلسلي واضح.</p>
     <img id="sh-prev" class="preview" alt="صورة التوثيق" hidden>
     <div id="sh-msg" hidden></div>
-    <div class="row"><button class="btn primary" id="sh-save" type="button">حفظ المحل</button><button class="btn fit" id="sh-cancel" type="button">إلغاء</button></div>`;
-  $('#sh-cancel').onclick = closeForm;
+    <div class="row"><button class="btn primary big" id="sh-save" type="button">حفظ المحل</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener('click', ev => { if (ev.target === bg) closeSheet(); });
+  $('#sh-x').onclick = closeSheet;
   $('#sh-scan').onclick = openScanner;
   $('#sh-serial').onchange = checkCode;
   $('#sh-photo').onchange = onPhoto;
   $('#sh-save').onclick = () => busy($('#sh-save'), saveShop);
-  f.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function closeForm() { $('#form').hidden = true; $('#form').innerHTML = ''; $('#new').hidden = false; draft = null; }
+function closeSheet() {
+  const bg = $('#sheetBg'); if (bg) bg.remove();
+  draft = null;
+}
 async function checkCode() {
   const serial = $('#sh-serial').value.trim(), box = $('#sh-code');
-  if (!serial) return;
+  if (!serial || !draft) return;
   try {
     const r = await api('checkCode', { serial });
     if (!draft) return;
     if (r.dup) msg(box, `هذا الستاند مسجّل من قبل: ${r.dup.shopName}، ${r.dup.agentName}، ${r.dup.day}`, 'err');
-    else msg(box, (draft.qr ? 'الباركود ينقري وهو جديد، ما مسجّل من قبل.' : 'الرقم التسلسلي جديد، ما مسجّل من قبل.'), 'good');
+    else msg(box, draft.qr ? 'الباركود ينقري وهو جديد، ما مسجّل من قبل.' : 'الرقم التسلسلي جديد، ما مسجّل من قبل.', 'good');
   } catch (e) { if (draft && draft.qr) msg(box, 'الباركود ينقري. ما كدرنا نتأكد إذا مسجّل من قبل (ماكو إنترنت).', 'warn'); }
 }
 function loadImage(file) {
   return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); });
 }
 async function onPhoto(ev) {
-  const file = ev.target.files[0]; if (!file) return;
+  const file = ev.target.files[0]; if (!file || !draft) return;
   try {
     const img = await loadImage(file), max = 1100, k = Math.min(1, max / Math.max(img.width, img.height));
     const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
@@ -395,17 +487,17 @@ async function saveShop() {
   const m = $('#sh-msg'), shopName = $('#sh-name').value.trim(), serial = $('#sh-serial').value.trim();
   if (!shopName) return msg(m, 'اكتب اسم المحل.');
   if (!serial) return msg(m, 'اكتب الرقم التسلسلي للستاند، أو امسح الباركود.');
-  if (!draft.photo) return msg(m, 'صوّر صورة التوثيق.');
+  if (!draft || !draft.photo) return msg(m, 'صوّر صورة التوثيق.');
   const p = await freshPos();
   const data = { shopName, serial, qr: draft.qr, photo: draft.photo, lat: p ? p.lat : '', lng: p ? p.lng : '', acc: p ? p.acc : '' };
   try {
     await api('addShop', data);
-    closeForm(); loadMe(); maybePing(true);
+    closeSheet(); loadMe(); maybePing(true);
   } catch (e) {
     if (!(e instanceof NetError)) return msg(m, e.message);
     S.queue.push(data);
     if (!store.set('queue', S.queue)) { S.queue.pop(); return msg(m, 'ماكو إنترنت وذاكرة الموبايل ممتلية. انتظر الإنترنت وحاول.'); }
-    closeForm(); renderQueue();
+    closeSheet(); renderQueue();
   }
 }
 
@@ -468,10 +560,11 @@ function finishScan(qr, serial) {
 $('#zoomClose').onclick = () => { $('#zoom').hidden = true; };
 
 /* ================= لوحة المسؤول ================= */
-const A = { tab: 'now', agents: [], photos: new Map(), map: null, layer: null, filt: { day: '', agentId: '', status: 'pending' }, offset: 0 };
+const A = { tab: 'now', agents: [], photos: new Map(), map: null, layer: null, line: null, fitted: false,
+  filt: { month: '', day: '', agentId: '', status: 'pending' }, offset: 0, month: '', monthText: '' };
 function viewAdmin() {
-  $('#title').textContent = 'لوحة المسؤول';
-  $('#logout').hidden = false;
+  setHead('لوحة المسؤول', S.user.name);
+  $('#logout').hidden = false; $('#fab').hidden = true;
   app.innerHTML = `<div class="tabs" role="tablist">
       <button data-t="now">الآن</button><button data-t="shops">المحلات</button><button data-t="month">عد الشهر</button><button data-t="agents">المندوبين</button>
     </div><div id="pane" style="display:flex;flex-direction:column;gap:16px"></div>`;
@@ -480,7 +573,7 @@ function viewAdmin() {
   adminTab('now');
 }
 function adminTab(t) {
-  A.tab = t; A.map = null;
+  A.tab = t; A.map = null; A.layer = null; A.line = null; A.fitted = false;
   app.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
   ({ now: tabNow, shops: tabShops, month: tabMonth, agents: tabAgents })[t]();
 }
@@ -520,7 +613,7 @@ function drawMap(agents, points) {
   const b = [];
   points.forEach(p => { L.circleMarker([p.lat, p.lng], { radius: 5, color: '#8a6100', fillColor: '#ffd400', fillOpacity: 1, weight: 1 }).bindPopup(`${esc(p.shopName)}<br>${esc(p.agentName)}`).addTo(A.layer); b.push([p.lat, p.lng]); });
   agents.forEach(a => { if (a.lastLat == null) return;
-    L.circleMarker([a.lastLat, a.lastLng], { radius: 9, color: '#fff', fillColor: '#1b1a14', fillOpacity: 1, weight: 2 }).bindTooltip(a.name, { permanent: true, direction: 'top' }).bindPopup(`${esc(a.name)}<br>${ago(a.lastAt)}`).addTo(A.layer);
+    L.circleMarker([a.lastLat, a.lastLng], { radius: 9, color: '#fff', fillColor: '#16160f', fillOpacity: 1, weight: 2 }).bindTooltip(a.name, { permanent: true, direction: 'top' }).bindPopup(`${esc(a.name)}<br>${ago(a.lastAt)}`).addTo(A.layer);
     b.push([a.lastLat, a.lastLng]); });
   if (b.length && !A.fitted) { A.map.fitBounds(b, { padding: [30, 30], maxZoom: 16 }); A.fitted = true; }
 }
@@ -531,7 +624,7 @@ async function showTrack(agentId) {
     if (A.line) A.map.removeLayer(A.line);
     const pts = r.points.map(p => [p.lat, p.lng]);
     if (pts.length < 2) { $('#mapNote').textContent = 'ماكو مسار كافي لهذا المندوب اليوم.'; return; }
-    A.line = L.polyline(pts, { color: '#b3261e', weight: 3 }).addTo(A.map);
+    A.line = L.polyline(pts, { color: '#ff8a80', weight: 3 }).addTo(A.map);
     A.map.fitBounds(A.line.getBounds(), { padding: [30, 30] });
     $('#mapNote').textContent = `المسار: ${pts.length} نقطة، من ${fmtTime(r.points[0].ts)} إلى ${fmtTime(r.points[pts.length - 1].ts)}.`;
     $('#map').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -552,8 +645,11 @@ async function tabShops() {
       <label>الحالة<select id="fl-status"><option value="">الكل</option>${Object.keys(STATUS).map(k => `<option value="${k}"${k === A.filt.status ? ' selected' : ''}>${STATUS[k]}</option>`).join('')}</select></label>
     </div><p class="muted" id="shopCount"></p></section>
     <section class="card"><div id="shopList"></div><button class="btn" id="more" hidden>عرض أكثر</button></section>`;
-  const upd = () => { A.filt = { month: $('#fl-month').value, day: $('#fl-day').value, agentId: $('#fl-agent').value, status: $('#fl-status').value };
-    if (A.filt.day) { A.filt.month = A.filt.day.slice(0, 7); $('#fl-month').value = A.filt.month; } loadShops(true); };
+  const upd = () => {
+    A.filt = { month: $('#fl-month').value, day: $('#fl-day').value, agentId: $('#fl-agent').value, status: $('#fl-status').value };
+    if (A.filt.day) { A.filt.month = A.filt.day.slice(0, 7); $('#fl-month').value = A.filt.month; }
+    loadShops(true);
+  };
   ['#fl-month', '#fl-day', '#fl-agent', '#fl-status'].forEach(s => $(s).onchange = upd);
   $('#more').onclick = () => loadShops(false);
   loadShops(true);
@@ -573,7 +669,7 @@ async function loadShops(reset) {
   if (A.tab !== 'shops') return;
   if (reset) $('#shopList').innerHTML = '';
   $('#shopCount').textContent = `${num(r.total)} محل`;
-  if (!r.total) $('#shopList').innerHTML = '<p class="muted">ماكو محلات بهذا الفلتر.</p>';
+  if (!r.total && reset) $('#shopList').innerHTML = '<p class="muted">ماكو محلات بهذا الفلتر.</p>';
   const month = A.filt.month;
   r.shops.forEach(s => {
     const el = document.createElement('div'); el.className = 'shop';
@@ -584,7 +680,7 @@ async function loadShops(reset) {
       <div class="muted">${s.lat != null ? `<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${s.lat},${s.lng}">موقع التسجيل</a>` : '<span class="chip rejected">بدون موقع</span>'}
         · ${s.qr ? 'الباركود مقري' : '<span class="chip pending">الباركود ما انمسح</span>'}</div>
       <div class="muted" data-note>${esc(s.note)}</div>
-      <div class="row"><button class="btn sm ok">قبول</button><button class="btn sm bad">رفض</button></div>
+      <div class="row"><button class="btn sm ok">قبول</button><button class="btn sm bad">رفض</button><button class="btn sm bad" data-del>حذف</button></div>
       <div class="row" data-rej hidden><input placeholder="سبب الرفض (يشوفه المندوب)"><button class="btn sm bad fit">تأكيد الرفض</button></div></div>`;
     const img = $('img', el); img.onclick = () => { if (A.photos.has(s.photoId)) { $('#zoomImg').src = A.photos.get(s.photoId); $('#zoom').hidden = false; } };
     photoObs ? photoObs.observe(img) : loadPhoto(img);
@@ -597,6 +693,13 @@ async function loadShops(reset) {
     okB.onclick = () => set(okB, 'ok', '');
     badB.onclick = () => { $('[data-rej]', el).hidden = false; $('[data-rej] input', el).focus(); };
     $('[data-rej] button', el).onclick = ev => set(ev.target, 'rejected', $('[data-rej] input', el).value.trim() || 'الصورة غير مقبولة');
+    $('[data-del]', el).onclick = ev => {
+      if (!confirm(`تحذف المحل "${s.shopName}" نهائياً مع صورته؟`)) return;
+      busy(ev.target, async () => {
+        try { await api('admin.delShop', { month, id: s.id }); el.remove(); A.offset = Math.max(0, A.offset - 1); $('#shopCount').textContent = `${num(Math.max(0, r.total - 1))} محل`; }
+        catch (e) { $('[data-note]', el).textContent = e.message; }
+      });
+    };
     $('#shopList').appendChild(el);
   });
   A.offset += r.shops.length;
@@ -630,17 +733,18 @@ async function loadMonth() {
 }
 
 /* ---- المندوبين ---- */
-async function tabAgents() {
+function tabAgents() {
   pane().innerHTML = `<form class="card" id="af"><h2>إضافة مندوب</h2><div class="row">
-      <label>الاسم<input id="ag-name" required></label>
-      <label>رقم الموبايل<input id="ag-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
-      <label>الرمز السري<input id="ag-pin" required inputmode="numeric" minlength="4" maxlength="8" class="ltr" placeholder="4 أرقام"></label></div>
-      <div id="agMsg" hidden></div><button class="btn primary">إضافة</button></form>
+    <label>الاسم<input id="ag-name" required></label>
+    <label>رقم الموبايل<input id="ag-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
+    <label>الرمز السري<input id="ag-pin" required inputmode="numeric" minlength="4" maxlength="8" class="ltr" placeholder="4 أرقام"></label></div>
+    <div id="agMsg" hidden></div><button class="btn primary">إضافة</button></form>
     <section class="card"><h2>رابط المندوبين</h2><p class="muted">دز هذا الرابط لكل مندوب ويّه رمزه. يفتحه بموبايله ويدخل مباشرة.</p>
-      <input id="share" class="ltr" readonly><button class="btn" id="shareCopy" type="button">نسخ الرابط</button><div id="shareMsg" hidden></div></section>
+    <input id="share" class="ltr" readonly><div class="row"><button class="btn" id="shareCopy" type="button">نسخ الرابط</button></div><div id="shareMsg" hidden></div></section>
     <section class="card"><h2>الحسابات</h2><div class="list" id="agList"><p class="muted">جاري التحميل…</p></div></section>`;
   $('#af').onsubmit = ev => { ev.preventDefault(); busy($('#af button'), async () => {
-    try { const pin = $('#ag-pin').value, name = $('#ag-name').value;
+    try {
+      const pin = $('#ag-pin').value, name = $('#ag-name').value;
       await api('admin.addAgent', { name, phone: $('#ag-phone').value, pin });
       msg($('#agMsg'), `انضاف ${name}. انطيه رقمه والرمز ${pin} حتى يدخل.`, 'good'); $('#af').reset(); loadAgents();
     } catch (e) { msg($('#agMsg'), e.message); }
@@ -657,10 +761,10 @@ async function loadAgents() {
   if (A.tab !== 'agents') return;
   const box = $('#agList'); box.innerHTML = '';
   A.agents.forEach(a => {
-    const el = document.createElement('div'); el.className = 'item'; el.style.flexWrap = 'wrap';
+    const el = document.createElement('div'); el.className = 'item';
     el.innerHTML = `<div class="grow"><div class="t">${esc(a.name)} ${a.role === 'admin' ? '<span class="chip off">مسؤول</span>' : ''} ${a.active ? '' : '<span class="chip rejected">موقوف</span>'}</div>
       <div class="muted ltr" style="text-align:right">0${esc(a.phone)}</div></div>
-      <button class="btn sm" data-pin>رمز جديد</button>${a.role === 'admin' ? '' : `<button class="btn sm ${a.active ? 'bad' : 'ok'}" data-act>${a.active ? 'إيقاف' : 'تفعيل'}</button>`}
+      <button class="btn sm" data-pin>رمز جديد</button>${a.role === 'admin' ? '' : `<button class="btn sm ${a.active ? 'bad' : 'ok'}" data-act>${a.active ? 'إيقاف' : 'تفعيل'}</button><button class="btn sm bad" data-del>حذف</button>`}
       <div class="row" data-box hidden style="flex-basis:100%"><input inputmode="numeric" class="ltr" placeholder="الرمز الجديد"><button class="btn sm primary fit">حفظ</button></div><div data-m hidden style="flex-basis:100%"></div>`;
     $('[data-pin]', el).onclick = () => { $('[data-box]', el).hidden = false; $('[data-box] input', el).focus(); };
     $('[data-box] button', el).onclick = ev => busy(ev.target, async () => {
@@ -669,6 +773,11 @@ async function loadAgents() {
     });
     const act = $('[data-act]', el);
     if (act) act.onclick = () => busy(act, async () => { try { await api('admin.setAgent', { id: a.id, active: !a.active }); loadAgents(); } catch (e) { msg($('[data-m]', el), e.message); } });
+    const del = $('[data-del]', el);
+    if (del) del.onclick = () => {
+      if (!confirm(`تحذف حساب "${a.name}"؟ محلاته تبقى بالجدول.`)) return;
+      busy(del, async () => { try { await api('admin.delAgent', { id: a.id }); loadAgents(); } catch (e) { msg($('[data-m]', el), e.message); } });
+    };
     box.appendChild(el);
   });
 }
