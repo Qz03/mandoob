@@ -2,677 +2,924 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16150f">
-<title>متابعة المندوبين</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F0A2B">
+<meta name="description" content="QIQ (Quiet Iraqi) فريق عراقي ناشئ في الأمن السيبراني: مسابقات CTF، تطوير، وتعليم.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2064%2064%22%20role%3D%22img%22%20aria-label%3D%22QIQ%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%233A0353%22%2F%3E%3Cpath%20fill%3D%22%23F8D299%22%20fill-rule%3D%22evenodd%22%20d%3D%22M13%209H45V53H13ZM23%2019V43H35V19Z%22%2F%3E%3Crect%20x%3D%2240%22%20y%3D%2248%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%233A0353%22%2F%3E%3Crect%20x%3D%2242%22%20y%3D%2250%22%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23F59E51%22%2F%3E%3C%2Fsvg%3E">
+<title>QIQ Quiet Iraqi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=JetBrains+Mono:wght@400;700;800&display=swap">
+<!-- access-key (base64): cWlx -->
 <style>
-/* التخطيط: عمود واحد للموبايل، شريط علوي داكن ثابت، بطاقات هادئة، والأصفر للفعل الرئيسي فقط */
-:root{
-  --bg:#f6f5ef; --surface:#ffffff; --ink:#1b1a14; --muted:#6c6959; --line:#e2dfd1;
-  --bar:#16150f; --bar-ink:#f6f5ef; --accent:#ffd400; --accent-ink:#1b1a14;
-  --ok:#1f7a45; --ok-bg:#e2f3e8; --bad:#b3261e; --bad-bg:#fbe6e4; --wait:#8a6100; --wait-bg:#fff2c9;
-  --font:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+/* Layout: one dark terminal world. Smooth pixel rain behind a split hero, then stacked bands; every block is square-cornered like the logo. */
+:root {
+  color-scheme: dark;
+  --purple: #3A0353;
+  --purple-light: #804A8A;
+  --sand: #F8D299;
+  --orange: #F59E51;
+  --ink: #1F0A2B;
+  --ink-deep: #130519;
+  --mist: #ECE3F1;
+  --text: #F5EEF8;
+  --muted: #C2AECB;
+  --line: rgba(128, 74, 138, .55);
+  --line-soft: rgba(128, 74, 138, .28);
+  --panel: rgba(58, 3, 83, .42);
+  --ok: #2E9E6B;
+  --danger: #D92D3A;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --mono: "JetBrains Mono", Consolas, ui-monospace, "IBM Plex Sans Arabic", monospace;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --gl: max(16px, env(safe-area-inset-left, 0px));
+  --gr: max(16px, env(safe-area-inset-right, 0px));
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#12110c; --surface:#1d1c15; --ink:#f3f1e6; --muted:#a5a18d; --line:#34322a;
-  --bar:#000; --ok:#6fd598; --ok-bg:#16301f; --bad:#ff8a80; --bad-bg:#3a1a17; --wait:#ffd76a; --wait-bg:#3a2f0c;
-  color-scheme:dark;
-}}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6}
-[hidden]{display:none!important}
-button,input,select,textarea{font:inherit;color:inherit}
-h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
-.bar{position:sticky;top:0;z-index:20;background:var(--bar);color:var(--bar-ink);
-  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:10px}
-.bar h1{font-size:1.05rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar button{background:none;border:1px solid #55523f;color:var(--bar-ink);border-radius:8px;padding:4px 12px;cursor:pointer}
-.wrap{max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 96px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.card h2{font-size:1.05rem}
-.muted{color:var(--muted);font-size:.9rem}
-label{display:flex;flex-direction:column;gap:4px;font-weight:500;font-size:.95rem}
-input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
-input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;font-weight:600;cursor:pointer;text-align:center}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.big{padding:16px;font-size:1.1rem;border-radius:14px}
-.btn.ok{color:var(--ok);border-color:var(--ok)}
-.btn.bad{color:var(--bad);border-color:var(--bad)}
-.btn:disabled{opacity:.55;cursor:default}
-.btn.sm{padding:6px 12px;font-size:.9rem}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.row>*{flex:1 1 140px;min-width:0}
-.row>.fit{flex:0 0 auto}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-.stat b{display:block;font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
-.stat span{color:var(--muted);font-size:.85rem}
-.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
-.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.rejected{background:var(--bad-bg);color:var(--bad)}
-.chip.pending{background:var(--wait-bg);color:var(--wait)} .chip.off{background:var(--line);color:var(--muted)}
-.list{display:flex;flex-direction:column}
-.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.item .grow{flex:1;min-width:0}
-.item .t{font-weight:600;overflow-wrap:anywhere}
-.msg{border-radius:10px;padding:10px 12px;font-size:.95rem}
-.msg.err{background:var(--bad-bg);color:var(--bad)} .msg.good{background:var(--ok-bg);color:var(--ok)} .msg.warn{background:var(--wait-bg);color:var(--wait)}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.tabs button{flex:1 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
-.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.preview{width:100%;max-height:300px;object-fit:contain;border-radius:10px;background:var(--bg)}
-#map{height:320px;border-radius:12px;border:1px solid var(--line);z-index:1}
-.shop{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
-.shop:first-child{border-top:0}
-.shop img{width:120px;height:150px;object-fit:cover;border-radius:10px;background:var(--line);cursor:zoom-in}
-.shop .meta{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
-@media (max-width:420px){.shop{grid-template-columns:92px 1fr}.shop img{width:92px;height:120px}}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
-th{color:var(--muted);font-size:.85rem;font-weight:600}
-.scroll{overflow-x:auto}
-.overlay{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
-.overlay video,.overlay img.full{flex:1;min-height:0;width:100%;object-fit:contain}
-.overlay .foot{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));color:#fff;display:flex;gap:10px;align-items:center}
-.overlay .foot span{flex:1}
-.gps{font-size:.8rem;border:1px solid #55523f;border-radius:999px;padding:2px 10px;white-space:nowrap}
-.gps.on{border-color:#6fd598;color:#6fd598} .gps.offl{border-color:#ff8a80;color:#ff8a80}
-.center{max-width:420px;margin:8vh auto 0}
-.ltr{direction:ltr;unicode-bidi:isolate}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { background: var(--ink); color: var(--text); font: 400 17px/1.75 var(--body); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+a { color: var(--sand); }
+h1, h2, h3 { margin: 0; line-height: 1.25; color: #fff; text-wrap: balance; }
+html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3 { font-family: var(--mono); letter-spacing: -.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--sand); outline-offset: 3px; }
+::selection { background: var(--orange); color: var(--ink); }
+.wrap { width: 100%; max-width: 1140px; margin-inline: auto; padding-left: var(--gl); padding-right: var(--gr); }
+
+.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 3px; width: 100%; background: linear-gradient(90deg, var(--sand), var(--orange)); transform: scaleX(0); transform-origin: left; z-index: 60; will-change: transform; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink-deep); }
+.cur { position: fixed; top: 0; left: 0; width: 30px; height: 30px; margin: -15px 0 0 -15px; border: 1px solid var(--sand); pointer-events: none; z-index: 95; opacity: 0; transition: width .3s var(--ease), height .3s var(--ease), margin .3s var(--ease), opacity .3s, background .3s; will-change: transform; }
+.cur.on { opacity: .8; } .cur.big { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgba(248, 210, 153, .1); }
+
+/* boot */
+.boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--ink-deep); padding: 24px; transition: opacity .7s var(--ease), visibility .7s, transform .7s var(--ease); }
+.boot.done { opacity: 0; visibility: hidden; transform: scale(1.04); }
+.boot-box { width: min(420px, 100%); display: grid; gap: 22px; }
+.boot svg { width: 190px; height: auto; }
+.boot-log { margin: 0; min-height: 5.4em; font: 400 13px/1.8 var(--mono); color: var(--muted); direction: ltr; text-align: left; white-space: pre-wrap; }
+.boot-log b { color: var(--sand); }
+.boot-bar { height: 8px; border: 1px solid var(--line); }
+.boot-bar i { display: block; height: 100%; background: var(--sand); transform: scaleX(0); transform-origin: left; transition: transform 1.3s var(--ease); }
+.boot-skip { justify-self: start; background: none; border: 0; padding: 4px 0; color: var(--muted); font: 400 12px var(--mono); cursor: pointer; }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(19, 5, 25, .88); border-bottom: 1px solid var(--line-soft); backdrop-filter: blur(10px); }
+.top-in { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+.brand { display: inline-flex; margin-inline-end: auto; }
+.brand svg { height: 28px; width: auto; display: block; }
+.brand svg rect { animation: blink 1.1s steps(1) infinite; }
+.nav { display: flex; gap: 2px; }
+.nav a { padding: .4em .75em; color: var(--muted); text-decoration: none; font-weight: 500; font-size: .93rem; position: relative; transition: color .25s; }
+html[lang="en"] .nav a { font: 400 .82rem var(--mono); }
+.nav a::after { content: ""; position: absolute; inset: auto .75em 2px; height: 2px; background: var(--sand); transform: scaleX(0); transition: transform .4s var(--ease); }
+.nav a:hover, .nav a.on { color: #fff; } .nav a:hover::after, .nav a.on::after { transform: scaleX(1); }
+.chip { min-height: 40px; padding: 0 .9em; border: 1px solid var(--line); background: transparent; color: var(--sand); font: 700 .82rem var(--mono); cursor: pointer; transition: border-color .25s, background .25s, color .25s; }
+.chip:hover { border-color: var(--sand); }
+.chip.access { background: var(--sand); border-color: var(--sand); color: var(--ink); font-family: var(--body); }
+.chip.access:hover { background: var(--orange); border-color: var(--orange); }
+@media (max-width: 860px) { .nav { display: none; } }
+
+/* buttons */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .6em; min-height: 48px; padding: .55em 1.4em; border: 2px solid transparent; font: 700 .98rem/1.2 var(--body); text-decoration: none; cursor: pointer; overflow: hidden; transition: color .3s, border-color .3s, transform .3s var(--ease); }
+html[lang="en"] .btn { font-family: var(--mono); font-size: .88rem; }
+.btn:hover { transform: translateY(-2px); } .btn:active { transform: translateY(1px); }
+.btn svg { width: 1.25em; height: 1.25em; }
+.btn-primary { background: var(--orange); color: var(--ink); }
+.btn-primary::before { content: ""; position: absolute; inset: 0; background: var(--sand); transform: translateX(-101%); transition: transform .5s var(--ease); }
+[dir="rtl"] .btn-primary::before { transform: translateX(101%); }
+.btn-primary:hover::before { transform: none; }
+.btn > * { position: relative; }
+.btn-ghost { border-color: var(--line); color: var(--sand); background: rgba(19, 5, 25, .5); }
+.btn-ghost:hover { border-color: var(--sand); color: #fff; }
+.btn-off { border: 2px dashed var(--line); color: var(--muted); cursor: default; }
+
+/* hero */
+.hero { position: relative; margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid var(--line-soft); overflow: hidden; isolation: isolate; }
+#rain { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(640px circle at var(--mx, 50%) var(--my, 30%), rgba(128, 74, 138, .3), transparent 62%), linear-gradient(180deg, rgba(31, 10, 43, .5), var(--ink) 97%); }
+.hero-in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(28px, 5vw, 60px); align-items: center; padding-block: clamp(48px, 9vw, 110px) clamp(36px, 6vw, 72px); will-change: transform, opacity; }
+.eyebrow { font: 700 .76rem/1.4 var(--mono); letter-spacing: .16em; color: var(--muted); direction: ltr; margin-bottom: 1.2em; }
+[dir="rtl"] .eyebrow { text-align: right; }
+.eyebrow i { display: inline-block; width: 8px; height: 8px; background: var(--ok); margin-right: 10px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; transform: scale(.7); } }
+.title { font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.15; color: var(--sand); margin-bottom: .4em; }
+html[lang="en"] .title { font-size: clamp(2rem, 5vw, 3.7rem); font-weight: 800; }
+.cursor { display: inline-block; width: .42em; height: .82em; margin-inline-start: .2em; background: var(--orange); vertical-align: -.06em; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.lead { max-width: 33em; font-size: 1.18rem; color: var(--mist); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 1.8em; }
+
+.term { background: rgba(19, 5, 25, .92); border: 1px solid var(--line); direction: ltr; text-align: left; box-shadow: 10px 10px 0 rgba(128, 74, 138, .25); min-width: 0; transition: border-color .3s, box-shadow .5s var(--ease); }
+.term:focus-within { border-color: var(--sand); box-shadow: 14px 14px 0 rgba(128, 74, 138, .35); }
+.term-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: rgba(58, 3, 83, .7); font: 400 .78rem var(--mono); color: var(--muted); }
+.term-bar span { display: inline-flex; gap: 6px; }
+.term-bar i { width: 10px; height: 10px; background: var(--purple-light); } .term-bar i:last-child { background: var(--sand); }
+.term-out { height: 300px; overflow-y: auto; padding: 16px 16px 4px; font: 400 .9rem/1.8 var(--mono); scrollbar-width: thin; scrollbar-color: var(--purple-light) transparent; }
+.term-out p { white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext; text-align: left; color: var(--muted); animation: rise .35s var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.term-out .c { color: #fff; } .term-out .c::before { content: "$ "; color: var(--sand); font-weight: 700; }
+.term-out .hi { color: var(--sand); } .term-out .er { color: #F28B94; } .term-out .ok { color: #7FD6AC; }
+.term-in { display: flex; align-items: center; gap: 8px; padding: 6px 16px 10px; font: 400 .9rem var(--mono); }
+.term-in label { color: var(--sand); font-weight: 700; }
+.term-in input { flex: 1; min-width: 0; background: transparent; border: 0; color: #fff; font: inherit; caret-color: var(--orange); }
+.term-in input:focus { outline: none; }
+.term-keys { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 14px; }
+.term-keys button { padding: .15em .7em; background: transparent; border: 1px solid var(--line-soft); color: var(--muted); font: 400 .72rem var(--mono); cursor: pointer; transition: border-color .25s, color .25s; }
+.term-keys button:hover { border-color: var(--sand); color: var(--sand); }
+
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; border: 1px solid var(--line); background: rgba(19, 5, 25, .85); }
+.facts div { padding: 18px 20px; border-inline-end: 1px solid var(--line); }
+.facts div:last-child { border: 0; }
+.facts dt { font: 700 .7rem var(--mono); letter-spacing: .14em; color: var(--muted); direction: ltr; }
+[dir="rtl"] .facts dt { text-align: right; }
+.facts dd { margin: 4px 0 0; font-weight: 700; color: var(--sand); }
+
+.ticker { border-block: 1px solid var(--line-soft); background: var(--ink-deep); overflow: hidden; direction: ltr; }
+.ticker div { display: flex; width: max-content; animation: slide 40s linear infinite; will-change: transform; }
+.ticker.rev div { animation-direction: reverse; animation-duration: 55s; }
+.ticker:hover div { animation-play-state: paused; }
+.ticker span { padding: 12px 22px; font: 700 .8rem var(--mono); letter-spacing: .14em; color: var(--muted); white-space: nowrap; }
+.ticker span::before { content: "■"; color: var(--purple-light); margin-right: 22px; }
+.ticker span:nth-child(4n)::before { color: var(--orange); }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* sections */
+section.band { padding-block: clamp(60px, 9vw, 110px); }
+.band.alt { background: rgba(19, 5, 25, .75); border-block: 1px solid var(--line-soft); }
+.label { font: 700 .76rem var(--mono); letter-spacing: .16em; color: var(--muted); direction: ltr; margin-bottom: 1em; }
+[dir="rtl"] .label { text-align: right; }
+.label::before { content: "// "; color: var(--orange); }
+.band h2 { font-size: clamp(1.7rem, 3.8vw, 2.5rem); margin-bottom: .4em; }
+html[lang="en"] .band h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
+.sub { max-width: 40em; color: var(--muted); font-size: 1.08rem; margin-bottom: 2.2em; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+
+.card { position: relative; padding: 28px 24px; background: var(--panel); border: 1px solid var(--line-soft); transition: border-color .35s; overflow: hidden; will-change: transform; }
+.card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(280px circle at var(--cx, 50%) var(--cy, 50%), rgba(248, 210, 153, .16), transparent 65%); opacity: 0; transition: opacity .4s; pointer-events: none; }
+.card:hover { border-color: var(--sand); } .card:hover::before { opacity: 1; }
+.card::after { content: ""; position: absolute; top: 8px; inset-inline-end: 8px; width: 10px; height: 10px; background: var(--purple-light); transition: background .35s, transform .6s var(--ease); }
+.card:hover::after { background: var(--orange); transform: rotate(180deg) scale(1.2); }
+.card h3 { font-size: 1.25rem; margin-bottom: .45em; }
+html[lang="en"] .card h3 { font-size: 1.05rem; }
+.card p { color: var(--muted); }
+.big { font: 800 2.6rem/1 var(--mono); color: var(--sand); direction: ltr; margin-bottom: .5em; }
+[dir="rtl"] .big { text-align: right; }
+.big::before { content: "[ "; color: var(--purple-light); } .big::after { content: " ]"; color: var(--purple-light); }
+.word { font: 700 1rem var(--mono); color: #fff; direction: ltr; margin-bottom: .4em; }
+[dir="rtl"] .word { text-align: right; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.card-head svg { width: 46px; height: 46px; color: var(--sand); transition: transform .6s var(--ease); }
+.card:hover .card-head svg { transform: translateY(-5px) scale(1.12); }
+.path { font: 400 .8rem var(--mono); color: var(--muted); direction: ltr; }
+
+/* roadmap */
+.road { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+.road-tabs { display: grid; gap: 8px; position: relative; }
+.road-tabs button { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 10px; width: 100%; padding: 14px 16px; text-align: start; background: transparent; border: 1px solid var(--line-soft); cursor: pointer; transition: border-color .3s, background .4s, transform .4s var(--ease); }
+.road-tabs button:hover { border-color: var(--purple-light); transform: translateX(-4px); }
+[dir="ltr"] .road-tabs button:hover { transform: translateX(4px); }
+.road-tabs b { font: 800 1.2rem var(--mono); color: var(--purple-light); direction: ltr; transition: color .3s; }
+.road-tabs span { font-weight: 700; color: var(--muted); transition: color .3s; }
+.road-tabs small { display: block; font: 400 .68rem var(--mono); letter-spacing: .12em; color: var(--purple-light); direction: ltr; }
+[dir="rtl"] .road-tabs small { text-align: right; }
+.road-tabs button[aria-selected="true"] { background: var(--panel); border-color: var(--sand); }
+.road-tabs button[aria-selected="true"] b { color: var(--orange); } .road-tabs button[aria-selected="true"] span { color: #fff; }
+.road-panel { padding: 30px 28px; background: var(--panel); border: 1px solid var(--line); min-height: 100%; }
+.road-panel > * { animation: rise .55s var(--ease) both; }
+.road-panel > :nth-child(2) { animation-delay: .06s; } .road-panel > :nth-child(3) { animation-delay: .12s; } .road-panel > :nth-child(4) { animation-delay: .18s; }
+.road-panel h3 { font-size: 1.6rem; color: var(--sand); margin-bottom: .3em; }
+.road-panel .intro { color: var(--mist); margin-bottom: 1.2em; }
+.road-panel ul { list-style: none; margin: 0 0 1.4em; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 22px; }
+.road-panel li { position: relative; padding-inline-start: 20px; color: var(--muted); font-size: .97rem; }
+.road-panel li::before { content: ""; position: absolute; inset-inline-start: 0; top: .72em; width: 8px; height: 8px; background: var(--purple-light); }
+.road-panel .out { padding: 14px 16px; border-inline-start: 4px solid var(--sand); background: var(--ink-deep); color: var(--mist); }
+.road-panel .out b { color: var(--sand); }
+.road-bar { height: 4px; margin-top: 18px; background: var(--line-soft); }
+.road-bar i { display: block; height: 100%; background: var(--sand); transform-origin: var(--origin, right); transition: transform .7s var(--ease); }
+[dir="ltr"] .road-bar i { --origin: left; }
+
+/* founder */
+.founder { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 24px; align-items: start; }
+.id { padding: 30px 26px; background: linear-gradient(180deg, var(--purple-light), var(--purple)); border: 1px solid var(--line); position: sticky; top: 90px; }
+.id svg { width: 76px; height: 76px; display: block; margin-bottom: 18px; }
+.id h3 { font-size: 1.7rem; color: var(--sand); }
+.id .en { font: 700 .8rem var(--mono); letter-spacing: .14em; color: #fff; direction: ltr; margin: .3em 0 1em; }
+[dir="rtl"] .id .en { text-align: right; }
+.id p { color: #fff; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 22px; background: rgba(248, 210, 153, .35); border: 1px solid rgba(248, 210, 153, .35); }
+.stats div { padding: 12px 10px; background: var(--purple); }
+.stats b { display: block; font: 800 1.7rem/1.2 var(--mono); color: var(--sand); direction: ltr; }
+[dir="rtl"] .stats b { text-align: right; }
+.stats span { font-size: .8rem; color: var(--mist); }
+.certs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.cert .code { display: inline-block; padding: .2em .7em; margin-bottom: 14px; background: var(--ink-deep); border: 1px solid var(--line); font: 700 .8rem var(--mono); color: var(--orange); direction: ltr; }
+.cert h3 { font-family: var(--mono); font-size: 1.15rem; direction: ltr; }
+[dir="rtl"] .cert h3 { text-align: right; }
+.cert .by { font: 400 .78rem var(--mono); color: var(--sand); direction: ltr; margin-bottom: .7em; }
+[dir="rtl"] .cert .by { text-align: right; }
+.cert p { font-size: .95rem; }
+
+.redact { display: grid; gap: 10px; margin-top: 18px; }
+.redact span { display: block; height: 16px; background: repeating-linear-gradient(90deg, var(--purple-light) 0 10px, transparent 10px 13px); opacity: .5; animation: breathe 3.5s ease-in-out infinite; }
+.redact span:nth-child(2) { width: 72%; animation-delay: .5s; } .redact span:nth-child(3) { width: 46%; animation-delay: 1s; }
+@keyframes breathe { 50% { opacity: .9; } }
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+
+/* glossary flip */
+.flip { height: 190px; perspective: 900px; background: none; border: 0; padding: 0; cursor: pointer; text-align: start; }
+.flip-in { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .8s var(--ease); }
+.flip[aria-pressed="true"] .flip-in { transform: rotateY(180deg); }
+.flip-f, .flip-b { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 20px; backface-visibility: hidden; border: 1px solid var(--line-soft); transition: border-color .3s; }
+.flip:hover .flip-f { border-color: var(--sand); }
+.flip-f { background: var(--panel); }
+.flip-f b { font: 800 1.35rem var(--mono); color: var(--sand); direction: ltr; }
+[dir="rtl"] .flip-f b { text-align: right; }
+.flip-f span { color: var(--mist); font-weight: 500; }
+.flip-f small { position: absolute; bottom: 12px; inset-inline-end: 14px; font: 400 .7rem var(--mono); color: var(--purple-light); }
+.flip-b { background: var(--sand); color: var(--ink); transform: rotateY(180deg); font-size: .95rem; line-height: 1.6; font-weight: 500; border-color: var(--sand); }
+
+/* faq */
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq-i { border: 1px solid var(--line-soft); background: var(--panel); transition: border-color .3s; }
+.faq-i.open { border-color: var(--sand); }
+.faq-q { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 18px 20px; background: none; border: 0; text-align: start; font-weight: 700; font-size: 1.05rem; color: #fff; cursor: pointer; }
+.faq-q i { flex: none; width: 14px; height: 14px; position: relative; }
+.faq-q i::before, .faq-q i::after { content: ""; position: absolute; inset: 6px 0; background: var(--sand); transition: transform .5s var(--ease); }
+.faq-q i::after { transform: rotate(90deg); } .faq-i.open .faq-q i::after { transform: rotate(0); }
+.faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .55s var(--ease); }
+.faq-i.open .faq-a { grid-template-rows: 1fr; }
+.faq-a div { overflow: hidden; } .faq-a p { padding: 0 20px 18px; color: var(--muted); }
+
+/* contact */
+.cta { background: linear-gradient(180deg, var(--purple-light), var(--purple)); border-block: 1px solid var(--line); }
+.cta-in { padding-block: clamp(48px, 7vw, 84px); display: grid; gap: 28px; }
+.cta h2 { color: var(--sand); font-size: clamp(1.7rem, 3.6vw, 2.5rem); margin-bottom: .3em; }
+.cta p { color: #fff; max-width: 36em; }
+.cta .btn-off { color: var(--sand); border-color: rgba(248, 210, 153, .6); }
+.links { display: grid; grid-template-columns: minmax(0, 420px); gap: 14px; }
+.link { display: grid; gap: 4px; padding: 18px 20px; background: rgba(19, 5, 25, .55); border: 1px solid rgba(248, 210, 153, .3); text-decoration: none; transition: border-color .3s, transform .5s var(--ease), background .3s; min-width: 0; }
+a.link:hover { border-color: var(--sand); transform: translateY(-4px); background: rgba(19, 5, 25, .8); }
+.link small { font: 700 .7rem var(--mono); letter-spacing: .14em; color: var(--muted); direction: ltr; }
+[dir="rtl"] .link small { text-align: right; }
+.link b { color: var(--sand); font: 700 1rem var(--mono); direction: ltr; overflow-wrap: anywhere; user-select: all; }
+[dir="rtl"] .link b { text-align: right; }
+.link span { color: var(--mist); font-size: .9rem; }
+
+footer { background: var(--ink-deep); padding-block: 36px; font-size: .9rem; color: var(--muted); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 28px; }
+.foot svg { height: 22px; width: auto; display: block; }
+
+.pre { opacity: 0; transform: translateY(34px); }
+.pre.in { opacity: 1; transform: none; transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+
+/* modal */
+.modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; background: rgba(19, 5, 25, .86); backdrop-filter: blur(6px); animation: fade .3s; }
+@keyframes fade { from { opacity: 0; } }
+.modal-box { width: min(460px, 100%); max-height: 100%; overflow-y: auto; background: var(--ink-deep); border: 1px solid var(--sand); box-shadow: 10px 10px 0 rgba(128, 74, 138, .35); animation: pop .5s var(--ease); }
+@keyframes pop { from { transform: translateY(24px) scale(.96); opacity: 0; } }
+.modal-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--sand); color: var(--ink); font: 700 .78rem var(--mono); letter-spacing: .12em; direction: ltr; }
+.modal-bar button { background: none; border: 0; color: var(--ink); font: 800 1rem var(--mono); cursor: pointer; min-width: 32px; min-height: 32px; }
+.modal-body { padding: 22px; display: grid; gap: 14px; }
+.modal-body h2 { font-size: 1.35rem; color: var(--sand); }
+.modal-body label { font-weight: 700; font-size: .9rem; color: var(--mist); display: grid; gap: 6px; }
+.modal-body input { width: 100%; padding: .65em .8em; background: var(--ink); border: 1px solid var(--line); color: #fff; font: 400 .95rem var(--mono); direction: ltr; transition: border-color .25s; }
+.modal-body input:focus { outline: 2px solid var(--sand); border-color: var(--sand); }
+.hint { font-size: .88rem; color: var(--muted); }
+.auth-log { min-height: 5.4em; margin: 0; padding: 12px; background: var(--ink); border: 1px solid var(--line-soft); font: 400 .8rem/1.8 var(--mono); color: var(--muted); direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; }
+.auth-log .ok { color: #7FD6AC; } .auth-log .er { color: #F28B94; } .auth-log .hi { color: var(--sand); }
+.shake { animation: shake .45s var(--ease); }
+@keyframes shake { 20% { transform: translateX(-9px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+.granted { animation: granted .9s var(--ease); }
+@keyframes granted { 30% { box-shadow: 0 0 0 6px var(--ok), 10px 10px 0 rgba(128, 74, 138, .35); transform: scale(1.02); } }
+
+@media (max-width: 960px) {
+  .hero-in, .grid3, .split, .road, .founder, .links { grid-template-columns: minmax(0, 1fr); }
+  .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts { grid-template-columns: repeat(2, 1fr); }
+  .facts div:nth-child(2) { border-inline-end: 0; } .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .id { position: static; }
+  .road-tabs { grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+  .road-tabs button:hover { transform: none; }
+}
+@media (max-width: 560px) {
+  .term-out { height: 250px; font-size: .8rem; } .actions .btn { width: 100%; }
+  .certs, .road-panel ul { grid-template-columns: minmax(0, 1fr); }
+  .grid4 { gap: 10px; } .flip { height: 200px; } .flip-f, .flip-b { padding: 14px; } .flip-b { font-size: .85rem; } .flip-f b { font-size: 1.05rem; }
+  .road-panel { padding: 22px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .pre { opacity: 1; transform: none; }
+}
 </style>
 </head>
 <body>
-<header class="bar">
-  <h1 id="title">متابعة المندوبين</h1>
-  <span id="gps" class="gps" hidden>GPS</span>
-  <button id="logout" hidden>خروج</button>
+
+
+<div class="progress" id="progress"></div>
+<div class="cur" id="cur" aria-hidden="true"></div>
+
+<div class="boot" id="boot">
+  <div class="boot-box">
+    <svg viewBox="0 0 108 51" role="img" aria-label="QIQ"><path fill="#F8D299" fill-rule="evenodd" d="M0 0H32V44H0ZM10 10V34H22V10ZM29 41H39V51H29ZM76 0H108V44H76ZM86 10V34H98V10ZM69 41H79V51H69Z"/><rect x="49" width="10" height="44" fill="#F59E51"/></svg>
+    <pre class="boot-log" id="bootLog"></pre>
+    <div class="boot-bar"><i id="bootBar"></i></div>
+    <button class="boot-skip" id="bootSkip" type="button">[ skip ]</button>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#top" aria-label="QIQ"><svg viewBox="0 0 108 51" role="img" aria-label="QIQ"><path fill="#F8D299" fill-rule="evenodd" d="M0 0H32V44H0ZM10 10V34H22V10ZM29 41H39V51H29ZM76 0H108V44H76ZM86 10V34H98V10ZM69 41H79V51H69Z"/><rect x="49" width="10" height="44" fill="#F59E51"/></svg></a>
+    <nav class="nav" aria-label="main">
+      <a href="#name" data-t="navName">الاسم</a>
+      <a href="#focus" data-t="navFocus">المسارات</a>
+      <a href="#road" data-t="navRoad">الطريق</a>
+      <a href="#founder" data-t="navFounder">المؤسس</a>
+      <a href="#glossary" data-t="navGloss">مصطلحات</a>
+      <a href="#join" data-t="navJoin">انضم</a>
+    </nav>
+    <button class="chip lang" id="langBtn" type="button" aria-label="Switch language">EN</button>
+    <button class="chip access" id="accessBtn" type="button" data-t="access">دخول</button>
+  </div>
 </header>
-<main class="wrap" id="app"><p class="muted">جاري التحميل…</p></main>
 
-<div class="overlay" id="scan" hidden>
-  <video id="video" playsinline muted></video>
-  <div class="foot"><span id="scanMsg">وجّه الكاميرا على باركود الستاند</span><button class="btn" id="scanClose">إغلاق</button></div>
-</div>
-<div class="overlay" id="zoom" hidden>
-  <img class="full" id="zoomImg" alt="صورة التوثيق">
-  <div class="foot"><span></span><button class="btn" id="zoomClose">إغلاق</button></div>
+<main id="top">
+<section class="hero" id="hero">
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <div class="wrap hero-in" id="heroIn">
+    <div>
+      <p class="eyebrow"><i></i>QIQ / QUIET IRAQI / CTF TEAM</p>
+      <h1 class="title"><span id="title" data-t="title">نحمي ما لا يُرى</span><span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead" data-t="lead">QIQ فريق عراقي ناشئ في الأمن السيبراني. نتدرّب في مسابقات CTF، نطوّر أدواتنا، وننشر ما نتعلّمه.</p>
+      <div class="actions">
+        <span data-discord data-label="join"></span>
+        <button class="btn btn-ghost" type="button" data-open-access data-t="tryAccess">أدخل المفتاح</button>
+      </div>
+    </div>
+    <div class="term" id="term">
+      <div class="term-bar"><span aria-hidden="true"><i></i><i></i><i></i></span>qiq@iraq: ~</div>
+      <div class="term-out" id="termOut" aria-live="polite"></div>
+      <form class="term-in" id="termForm" autocomplete="off">
+        <label for="termInput">$</label>
+        <input id="termInput" type="text" spellcheck="false" autocapitalize="none" aria-label="terminal command" placeholder="help">
+      </form>
+      <div class="term-keys" id="termKeys"></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <dl class="facts">
+      <div><dt>STATUS</dt><dd data-t="f1">فريق ناشئ</dd></div>
+      <div><dt>FOCUS</dt><dd data-t="f2">CTF · تطوير · تعليم</dd></div>
+      <div><dt>MEMBERS</dt><dd data-t="f3">مجهولون</dd></div>
+      <div><dt>BASE</dt><dd data-t="f4">العراق</dd></div>
+    </dl>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true"><div id="ticker"></div></div>
+
+<section class="band" id="name">
+  <div class="wrap">
+    <p class="label">NAME</p>
+    <h2 data-t="nameH">ماذا يعني QIQ</h2>
+    <p class="sub" data-t="nameP">الاسم اختصار Quiet Iraqi، ويُقرأ أيضاً: الذكاء العراقي الهادئ.</p>
+    <div class="grid3">
+      <div class="card"><p class="big">Q</p><p class="word">Quiet</p><p data-t="n1">الهادئ. نعمل بصمت، ونترك النتيجة تتكلم.</p></div>
+      <div class="card"><p class="big">IQ</p><p class="word">Iraq</p><p data-t="n2">رمز العراق. من هنا نبدأ، ولأهله نكتب.</p></div>
+      <div class="card"><p class="big">IQ</p><p class="word">Intelligence</p><p data-t="n3">الذكاء. الفهم قبل الأداة، والسؤال قبل الجواب.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="focus">
+  <div class="wrap">
+    <p class="label">FOCUS</p>
+    <h2 data-t="focusH">ما نعمل عليه</h2>
+    <p class="sub" data-t="focusP">ثلاثة مسارات، وكل عضو يختار مساره.</p>
+    <div class="grid3">
+      <div class="card"><div class="card-head"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="2" y="0" width="1" height="1" fill="currentColor"/><rect x="2" y="1" width="7" height="1" fill="currentColor"/><rect x="2" y="2" width="9" height="1" fill="currentColor"/><rect x="2" y="3" width="9" height="1" fill="currentColor"/><rect x="2" y="4" width="9" height="1" fill="currentColor"/><rect x="2" y="5" width="7" height="1" fill="currentColor"/><rect x="2" y="6" width="1" height="1" fill="currentColor"/><rect x="2" y="7" width="1" height="1" fill="currentColor"/><rect x="2" y="8" width="1" height="1" fill="currentColor"/><rect x="2" y="9" width="1" height="1" fill="currentColor"/><rect x="1" y="10" width="3" height="1" fill="#F59E51"/></svg><span class="path">~/ctf/</span></div><h3 data-t="c1h">مسابقات CTF</h3><p data-t="c1p">نتدرّب على تحديات الويب، التشفير، الهندسة العكسية، التحليل الجنائي واستغلال الثغرات، ونشارك كفريق واحد.</p></div>
+      <div class="card"><div class="card-head"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="1" y="2" width="1" height="1" fill="currentColor"/><rect x="2" y="3" width="1" height="1" fill="currentColor"/><rect x="3" y="4" width="1" height="1" fill="currentColor"/><rect x="4" y="5" width="1" height="1" fill="currentColor"/><rect x="3" y="6" width="1" height="1" fill="currentColor"/><rect x="2" y="7" width="1" height="1" fill="currentColor"/><rect x="1" y="8" width="1" height="1" fill="currentColor"/><rect x="6" y="8" width="5" height="1" fill="#F59E51"/></svg><span class="path">~/dev/</span></div><h3 data-t="c2h">التطوير</h3><p data-t="c2p">نكتب أدواتنا وسكربتاتنا بأنفسنا. من يبني الأداة يفهم كيف تعمل، وأين تفشل.</p></div>
+      <div class="card"><div class="card-head"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="1" y="1" width="4" height="1" fill="currentColor"/><rect x="7" y="1" width="4" height="1" fill="currentColor"/><rect x="0" y="2" width="1" height="1" fill="currentColor"/><rect x="5" y="2" width="2" height="1" fill="currentColor"/><rect x="11" y="2" width="1" height="1" fill="currentColor"/><rect x="0" y="3" width="1" height="1" fill="currentColor"/><rect x="2" y="3" width="2" height="1" fill="#F59E51"/><rect x="5" y="3" width="2" height="1" fill="currentColor"/><rect x="8" y="3" width="2" height="1" fill="currentColor"/><rect x="11" y="3" width="1" height="1" fill="currentColor"/><rect x="0" y="4" width="1" height="1" fill="currentColor"/><rect x="5" y="4" width="2" height="1" fill="currentColor"/><rect x="11" y="4" width="1" height="1" fill="currentColor"/><rect x="0" y="5" width="1" height="1" fill="currentColor"/><rect x="2" y="5" width="2" height="1" fill="#F59E51"/><rect x="5" y="5" width="2" height="1" fill="currentColor"/><rect x="8" y="5" width="2" height="1" fill="currentColor"/><rect x="11" y="5" width="1" height="1" fill="currentColor"/><rect x="0" y="6" width="1" height="1" fill="currentColor"/><rect x="5" y="6" width="2" height="1" fill="currentColor"/><rect x="11" y="6" width="1" height="1" fill="currentColor"/><rect x="0" y="7" width="1" height="1" fill="currentColor"/><rect x="5" y="7" width="2" height="1" fill="currentColor"/><rect x="11" y="7" width="1" height="1" fill="currentColor"/><rect x="1" y="8" width="4" height="1" fill="currentColor"/><rect x="7" y="8" width="4" height="1" fill="currentColor"/><rect x="5" y="9" width="2" height="1" fill="currentColor"/></svg><span class="path">~/edu/</span></div><h3 data-t="c3h">التعليم</h3><p data-t="c3p">نشرح ما نحلّه في مقالات وحلول مكتوبة، ونساعد المبتدئ على الخطوة الأولى.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="road">
+  <div class="wrap">
+    <p class="label">ROADMAP</p>
+    <h2 data-t="roadH">مراحل الطريق</h2>
+    <p class="sub" data-t="roadP">خمس مراحل مترابطة، من 9 إلى 12 شهراً، وكل مرحلة تبني على التي قبلها. هذا الطريق الذي يمشيه المتدرّب مع المؤسس.</p>
+    <div class="road">
+      <div class="road-tabs" id="roadTabs" role="tablist"></div>
+      <div><div class="road-panel" id="roadPanel" role="tabpanel"></div><div class="road-bar"><i id="roadBar"></i></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker rev" aria-hidden="true"><div id="tools"></div></div>
+
+<section class="band alt" id="founder">
+  <div class="wrap">
+    <p class="label">FOUNDER</p>
+    <h2 data-t="founderH">المؤسس</h2>
+    <p class="sub" data-t="founderP">الاسم الوحيد المعلن في الفريق، وشهاداته كما يعرضها في موقعه.</p>
+    <div class="founder">
+      <div class="id">
+        <svg viewBox="0 0 64 64" role="img" aria-label="QIQ"><rect width="64" height="64" fill="#3A0353"/><path fill="#F8D299" fill-rule="evenodd" d="M13 9H45V53H13ZM23 19V43H35V19Z"/><rect x="40" y="48" width="12" height="12" fill="#3A0353"/><rect x="42" y="50" width="10" height="10" fill="#F59E51"/></svg>
+        <h3 data-t="founder">علي ع. مزهر</h3>
+        <p class="en">ALI A. MEZHER</p>
+        <p data-t="founderBio">مؤسس QIQ ومدرّب في الأمن السيبراني. يرافق المتدرّب من أول سطر في الطرفية حتى أول اختبار اختراق حقيقي.</p>
+        <div class="stats">
+          <div><b data-count="6">6</b><span data-t="s1">شهادات دولية</span></div>
+          <div><b data-count="5">5</b><span data-t="s2">مراحل</span></div>
+          <div><b data-count="12">12</b><span data-t="s3">شهراً</span></div>
+        </div>
+      </div>
+      <div class="certs" id="certs"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="team">
+  <div class="wrap">
+    <p class="label">TEAM</p>
+    <h2 data-t="teamH">الفريق</h2>
+    <p class="sub" data-t="teamP">فريق جديد، ولا ندّعي غير ذلك. لا إنجازات معروضة هنا حتى تتحقق.</p>
+    <div class="split">
+      <div class="card">
+        <div class="card-head"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="1" fill="currentColor"/><rect x="2" y="2" width="8" height="1" fill="currentColor"/><rect x="1" y="3" width="10" height="1" fill="currentColor"/><rect x="1" y="4" width="2" height="1" fill="currentColor"/><rect x="3" y="4" width="2" height="1" fill="#F59E51"/><rect x="5" y="4" width="2" height="1" fill="currentColor"/><rect x="7" y="4" width="2" height="1" fill="#F59E51"/><rect x="9" y="4" width="2" height="1" fill="currentColor"/><rect x="1" y="5" width="2" height="1" fill="currentColor"/><rect x="3" y="5" width="2" height="1" fill="#F59E51"/><rect x="5" y="5" width="2" height="1" fill="currentColor"/><rect x="7" y="5" width="2" height="1" fill="#F59E51"/><rect x="9" y="5" width="2" height="1" fill="currentColor"/><rect x="1" y="6" width="10" height="1" fill="currentColor"/><rect x="1" y="7" width="10" height="1" fill="currentColor"/><rect x="1" y="8" width="10" height="1" fill="currentColor"/><rect x="1" y="9" width="10" height="1" fill="currentColor"/><rect x="1" y="10" width="1" height="1" fill="currentColor"/><rect x="3" y="10" width="2" height="1" fill="currentColor"/><rect x="7" y="10" width="2" height="1" fill="currentColor"/><rect x="10" y="10" width="1" height="1" fill="currentColor"/></svg><span class="path">members.txt</span></div>
+        <h3 data-t="memH">الأعضاء مجهولون</h3>
+        <p data-t="memP">قرار وليس نقصاً. لا أسماء ولا صور ولا حسابات شخصية.</p>
+        <div class="redact" aria-hidden="true"><span></span><span></span><span></span></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="1" y="1" width="2" height="1" fill="currentColor"/><rect x="9" y="1" width="2" height="1" fill="currentColor"/><rect x="1" y="2" width="2" height="1" fill="currentColor"/><rect x="5" y="2" width="2" height="1" fill="#F59E51"/><rect x="9" y="2" width="2" height="1" fill="currentColor"/><rect x="5" y="3" width="2" height="1" fill="#F59E51"/><rect x="0" y="4" width="4" height="1" fill="currentColor"/><rect x="8" y="4" width="4" height="1" fill="currentColor"/><rect x="0" y="5" width="4" height="1" fill="currentColor"/><rect x="5" y="5" width="2" height="1" fill="#F59E51"/><rect x="8" y="5" width="4" height="1" fill="currentColor"/><rect x="0" y="6" width="4" height="1" fill="currentColor"/><rect x="4" y="6" width="4" height="1" fill="#F59E51"/><rect x="8" y="6" width="4" height="1" fill="currentColor"/><rect x="0" y="7" width="4" height="1" fill="currentColor"/><rect x="4" y="7" width="4" height="1" fill="#F59E51"/><rect x="8" y="7" width="4" height="1" fill="currentColor"/><rect x="4" y="8" width="4" height="1" fill="#F59E51"/><rect x="4" y="9" width="4" height="1" fill="#F59E51"/></svg><span class="path">goals.txt</span></div>
+        <h3 data-t="goalsH">أهداف الفريق</h3>
+        <p data-t="goalsP">رفع الوعي السيبراني في العراق، تكوين فريق متكامل وقوي يغطّي كل تخصصات CTF، ومشاركة ما نتعلّمه مع من يبدأ بعدنا.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="glossary">
+  <div class="wrap">
+    <p class="label">GLOSSARY</p>
+    <h2 data-t="glossH">مصطلحات ستتقنها</h2>
+    <p class="sub" data-t="glossP">اضغط على أي بطاقة لتعرف معناها ببساطة.</p>
+    <div class="grid4" id="gloss"></div>
+  </div>
+</section>
+
+<section class="band" id="faq">
+  <div class="wrap">
+    <p class="label">FAQ</p>
+    <h2 data-t="faqH">أسئلة تهمّك</h2>
+    <div class="faq" id="faqList"></div>
+  </div>
+</section>
+
+<section class="cta" id="join">
+  <div class="wrap cta-in">
+    <div><h2 data-t="ctaH">الفريق يتكوّن الآن</h2><p data-t="ctaP">إذا كنت تتعلّم الأمن السيبراني وتريد فريقاً تتدرّب معه، مكانك في سيرفر ديسكورد. رابط السيرفر يُفتح بمفتاح الدخول.</p></div>
+    <div><span data-discord data-label="open"></span></div>
+    <div class="links">
+      <div class="link"><small>EMAIL</small><b>im.03@outlook.com</b><span data-t="l2">انسخ العنوان وراسل المؤسس</span></div>
+    </div>
+  </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <svg viewBox="0 0 108 51" role="img" aria-label="QIQ"><path fill="#F8D299" fill-rule="evenodd" d="M0 0H32V44H0ZM10 10V34H22V10ZM29 41H39V51H29ZM76 0H108V44H76ZM86 10V34H98V10ZM69 41H79V51H69Z"/><rect x="49" width="10" height="44" fill="#F59E51"/></svg>
+    <span data-t="foot">QIQ · Quiet Iraqi · أسّسه علي ع. مزهر · الأعضاء مجهولون</span>
+  </div>
+</footer>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-bar"><span>AUTH REQUIRED</span><button type="button" id="modalClose" aria-label="Close">×</button></div>
+    <form class="modal-body" id="authForm" autocomplete="off">
+      <h2 id="modalTitle" data-t="mTitle">مفتاح الدخول</h2>
+      <p class="hint" data-t="mHint">أدخل مفتاح الدخول ليُفتح رابط سيرفر ديسكورد. التلميح: QIQ</p>
+      <label><span data-t="mUser">الاسم المستعار (أي اسم)</span><input id="authUser" type="text" maxlength="24" spellcheck="false" autocapitalize="none" required></label>
+      <label><span data-t="mKey">مفتاح الدخول</span><input id="authKey" type="password" maxlength="64" required></label>
+      <pre class="auth-log" id="authLog">&gt; waiting for credentials_</pre>
+      <button class="btn btn-primary" type="submit"><span data-t="mBtn">تحقّق</span></button>
+      <div id="authReward" hidden></div>
+    </form>
+  </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-"use strict";
-// رابط الخادم: يا تكتبه هنا، يا ينحفظ من شاشة الربط، يا يجي ويّه رابط المندوبين (#s=...)
-const FIXED_API = "";
-const $ = (s, r = document) => r.querySelector(s);
-const app = $('#app');
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num = n => Number(n || 0).toLocaleString('en-US');
-const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
-  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
-};
-const S = { token: store.get('token', ''), user: store.get('user', null), pos: null, queue: store.get('queue', []), timers: [] };
-const STATUS = { ok: 'مقبول', pending: 'بانتظار التدقيق', rejected: 'مرفوض' };
-const fmtTime = ts => new Date(ts).toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-const bagDay = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-function ago(ts) {
-  if (!ts) return 'ما دز موقع بعد';
-  const m = Math.round((Date.now() - new Date(ts)) / 60000);
-  if (m < 1) return 'هسه';
-  if (m < 60) return 'قبل ' + m + ' دقيقة';
-  if (m < 1440) return 'قبل ' + Math.round(m / 60) + ' ساعة';
-  return 'قبل ' + Math.round(m / 1440) + ' يوم';
-}
-
-const b64e = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const b64d = t => { try { return decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/')))); } catch (e) { return ''; } };
-const okApi = u => /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.test(u) || /^\/api$/.test(u);
 (function () {
-  const m = /^#s=([\w-]+)$/.exec(location.hash), fromLink = m ? b64d(m[1]) : '';
-  if (fromLink && okApi(fromLink)) store.set('api', fromLink);
-  window.API_URL = FIXED_API || store.get('api', '');
+  'use strict';
+  // رابط ديسكورد لا يظهر إلا بعد حل تحدّي الدخول. لتغييره: ضع الرابط الجديد بصيغة base64 هنا.
+  var DISCORD_B64 = 'aHR0cHM6Ly9kaXNjb3JkLmdnL0JLOVZCcXM5Sw==';
+  var DISCORD_URL = '';
+  function unlock() { try { DISCORD_URL = atob(DISCORD_B64); } catch (e) {} }
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var CHAT = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="1" y="1" width="10" height="1" fill="currentColor"/><rect x="0" y="2" width="1" height="1" fill="currentColor"/><rect x="11" y="2" width="1" height="1" fill="currentColor"/><rect x="0" y="3" width="1" height="1" fill="currentColor"/><rect x="11" y="3" width="1" height="1" fill="currentColor"/><rect x="0" y="4" width="1" height="1" fill="currentColor"/><rect x="2" y="4" width="2" height="1" fill="#F59E51"/><rect x="5" y="4" width="2" height="1" fill="#F59E51"/><rect x="8" y="4" width="2" height="1" fill="#F59E51"/><rect x="11" y="4" width="1" height="1" fill="currentColor"/><rect x="0" y="5" width="1" height="1" fill="currentColor"/><rect x="11" y="5" width="1" height="1" fill="currentColor"/><rect x="0" y="6" width="1" height="1" fill="currentColor"/><rect x="11" y="6" width="1" height="1" fill="currentColor"/><rect x="1" y="7" width="3" height="1" fill="currentColor"/><rect x="5" y="7" width="6" height="1" fill="currentColor"/><rect x="2" y="8" width="1" height="1" fill="currentColor"/><rect x="4" y="8" width="1" height="1" fill="currentColor"/><rect x="2" y="9" width="2" height="1" fill="currentColor"/><rect x="2" y="10" width="1" height="1" fill="currentColor"/></svg>';
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  // ---------- content that exists in both languages ----------
+  var ROAD = [
+    { tag: 'FOUNDATIONS',
+      ar: { t: 'الأساسيات', d: 'نفهم كيف تُبنى الأنظمة قبل أن نختبرها.', i: ['مدخل إلى الأمن السيبراني ومجالاته', 'أخلاقيات الاختراق والجانب القانوني', 'بناء مختبر اختراق شخصي', 'أساسيات الشبكات وكيف يعمل الإنترنت', 'أساسيات Linux وسطر الأوامر', 'أساسيات Kali Linux وأدواته', 'أساسيات Windows وثغراته الشائعة'], o: 'تبني مختبرك بنفسك، وتتحرك بثقة داخل Linux، وتفهم كيف تنتقل البيانات في الشبكة.' },
+      en: { t: 'Foundations', d: 'Understand how systems are built before testing them.', i: ['Introduction to cyber security and its fields', 'Hacking ethics and the legal side', 'Building a personal pentest lab', 'Networking basics and how the internet works', 'Linux and the command line', 'Kali Linux and its tools', 'Windows basics and its common weaknesses'], o: 'You build your own lab, move around Linux with confidence, and understand how data travels across a network.' } },
+    { tag: 'CODE',
+      ar: { t: 'البرمجة', d: 'تصنع أدواتك بيدك بدل أن تنتظرها.', i: ['تسخير البرمجة لخدمتك كمختبر اختراق', 'Python لبناء أدوات الاختراق والدفاع', 'Bash لأتمتة المهام', 'HTML و JavaScript لفهم ثغرات المواقع'], o: 'تكتب أدواتك الصغيرة بنفسك، مثل فاحص منافذ ومولّد كلمات مرور.' },
+      en: { t: 'Code', d: 'Make your own tools instead of waiting for them.', i: ['Using code to serve you as a pentester', 'Python for offensive and defensive tools', 'Bash for automating tasks', 'HTML and JavaScript to understand web flaws'], o: 'You write your own small tools, such as a port scanner and a password generator.' } },
+    { tag: 'RECON',
+      ar: { t: 'جمع المعلومات والفحص', d: 'كل اختراق ناجح يبدأ بمعلومة.', i: ['تقنيات OSINT لجمع المعلومات المفتوحة', 'فحص الشبكات بـ Nmap و Wireshark', 'فحص الثغرات واكتشافها'], o: 'تجمع المعلومات عن هدف تدريبي، وتكتشف ثغراته بطريقة منظّمة.' },
+      en: { t: 'Recon and scanning', d: 'Every successful breach starts with a piece of information.', i: ['OSINT techniques for open-source information', 'Network scanning with Nmap and Wireshark', 'Vulnerability scanning and discovery'], o: 'You gather information on a training target and find its weaknesses in an organised way.' } },
+    { tag: 'OFFENSE · DEFENSE',
+      ar: { t: 'الهجوم والدفاع', d: 'تتقن الجهتين، ثم تختار تخصصك.', i: ['الهندسة الاجتماعية والتصيّد وكشفه', 'اختراق المواقع و OWASP Top 10', 'Burp Suite و Metasploit', 'كسر كلمات المرور', 'اختراق الشبكات اللاسلكية', 'تصعيد الصلاحيات', 'التشفير وحماية البيانات', 'الجدار الناري وأنظمة كشف التسلل', 'تحليل السجلات واكتشاف الهجمات', 'تحليل البرمجيات الخبيثة', 'الاستجابة للحوادث والتحليل الجنائي', 'حماية الحسابات والأجهزة'], o: 'تنفّذ اختبار اختراق كاملاً على مختبر تدريبي، وتعرف كيف تكشف الهجوم وتصدّه.' },
+      en: { t: 'Offense and defense', d: 'Master both sides, then choose your specialty.', i: ['Social engineering, phishing and how to spot it', 'Web hacking and the OWASP Top 10', 'Burp Suite and Metasploit', 'Password cracking', 'Wireless network attacks', 'Privilege escalation', 'Cryptography and data protection', 'Firewalls and intrusion detection', 'Log analysis and attack detection', 'Malware analysis basics', 'Incident response and forensics', 'Protecting accounts and devices'], o: 'You run a full penetration test on a training lab, and know how to detect an attack and stop it.' } },
+    { tag: 'PRO LEVEL',
+      ar: { t: 'الاحتراف', d: 'تخرج بمستوى يثبته عملك، لا ورقة حضور.', i: ['حل تحديات CTF والمنصات التدريبية', 'كتابة تقرير اختبار اختراق احترافي', 'التحضير لشهادتي Security+ و eJPT', 'بناء ملف أعمال والدخول إلى سوق العمل'], o: 'تحل تحديات CTF، وتكتب تقريراً احترافياً، وتكون جاهزاً للشهادات وسوق العمل.' },
+      en: { t: 'Pro level', d: 'Leave with a level proven by your work, not by attendance.', i: ['Solving CTF challenges and training platforms', 'Writing a professional pentest report', 'Preparing for Security+ and eJPT', 'Building a portfolio and entering the job market'], o: 'You solve CTF challenges, write a professional report, and are ready for certifications and work.' } }
+  ];
+  var CERTS = [
+    { c: 'v13', n: 'CEH v13', by: 'EC-Council', ar: 'شهادة الهاكر الأخلاقي المعتمد بإصدارها الثالث عشر، تغطي مراحل الاختراق من الاستطلاع حتى الاستغلال.', en: 'Certified Ethical Hacker, version 13. Covers the stages of an attack from reconnaissance to exploitation.' },
+    { c: 'root#', n: 'OSCP', by: 'OffSec', ar: 'اختبار عملي حيّ يمتد 24 ساعة لاختراق أجهزة وشبكة كاملة، ثم كتابة تقرير احترافي.', en: 'A live 24-hour practical exam: compromise machines and a full network, then write a professional report.' },
+    { c: 'AD', n: 'PNPT', by: 'TCM Security', ar: 'اختبار عملي لعدة أيام يحاكي اختبار اختراق حقيقياً لشبكة شركة، ويُختتم بتقرير وجلسة عرض.', en: 'A multi-day practical exam that simulates a real company network pentest, ending with a report and debrief.' },
+    { c: '>>>py', n: 'PCPP', by: 'Python Institute', ar: 'شهادة احترافية في Python: البرمجة الكائنية، الشبكات والملفات، وبناء أدوات الأمن والأتمتة.', en: 'Professional Python certification: OOP, networking and files, and building security and automation tools.' },
+    { c: 'NET', n: 'CCNA Cybersecurity', by: 'Cisco', ar: 'أساسيات الشبكات وعمليات الأمن: مراقبة حركة البيانات، تحليل الحوادث، والعمل داخل مراكز العمليات الأمنية.', en: 'Networking and security operations: traffic monitoring, incident analysis and SOC work.' },
+    { c: '◆', n: 'Meta Hacker Plus', by: 'Meta · Bug Bounty · Diamond', ar: 'تصنيف Diamond في برنامج Hacker Plus لمكافآت اكتشاف الثغرات لدى Meta.', en: "Diamond rank in Hacker Plus, Meta's bug bounty programme." }
+  ];
+  var GLOSS = [
+    { k: 'Phishing', ar: ['التصيّد الاحتيالي', 'رسالة أو موقع مزيّف يتنكّر بهيئة جهة موثوقة، ليخدعك ويسرق كلمة مرورك أو بياناتك.'], en: ['Phishing', 'A fake message or site dressed up as a trusted party to trick you into giving up your password or data.'] },
+    { k: 'Firewall', ar: ['الجدار الناري', 'حارس يقف بين جهازك والإنترنت، يسمح بالاتصالات الآمنة ويمنع المشبوهة.'], en: ['Firewall', 'A guard between your device and the internet that allows safe connections and blocks suspicious ones.'] },
+    { k: 'Exploit', ar: ['الاستغلال', 'طريقة أو كود يستفيد من ثغرة في نظام ليجعله يفعل ما لم يُصمَّم له.'], en: ['Exploit', 'A method or piece of code that uses a flaw to make a system do what it was not designed to do.'] },
+    { k: 'Payload', ar: ['الحمولة', 'الجزء الذي يُنفَّذ على الجهاز الهدف بعد نجاح الاستغلال، مثل فتح اتصال عن بُعد.'], en: ['Payload', 'The part that runs on the target after the exploit succeeds, such as opening a remote connection.'] },
+    { k: 'OSINT', ar: ['استخبارات المصادر المفتوحة', 'جمع المعلومات من المصادر العامة: المواقع، ومنصات التواصل، والسجلات المنشورة.'], en: ['Open-source intelligence', 'Gathering information from public sources: websites, social platforms and published records.'] },
+    { k: 'CTF', ar: ['التقط العَلَم', 'مسابقة تحديات أمنية، تحل فيها ألغازاً واختراقات تدريبية لتجد «علماً» مخفياً.'], en: ['Capture the Flag', 'A security competition where you solve puzzles and training hacks to find a hidden flag.'] },
+    { k: 'SOC', ar: ['مركز العمليات الأمنية', 'فريق يراقب أنظمة المؤسسة على مدار الساعة، ليكتشف الهجمات ويتصدّى لها.'], en: ['Security Operations Centre', "A team that watches an organisation's systems around the clock to detect and stop attacks."] },
+    { k: 'Bug Bounty', ar: ['مكافآت الثغرات', 'برامج تكافئك الشركات فيها عندما تكتشف ثغرة في أنظمتها وتبلّغها بها بمسؤولية.'], en: ['Bug bounty', 'Programmes where companies reward you for finding a flaw in their systems and reporting it responsibly.'] }
+  ];
+  var FAQ = [
+    { ar: ['هل أحتاج خبرة سابقة؟', 'لا. المستوى ليس شرطاً، والشرط هو الاستمرار في التعلّم. الطريق يبدأ من الصفر: كيف يعمل الحاسوب والإنترنت، ثم يتدرّج خطوة بخطوة.'], en: ['Do I need previous experience?', 'No. Skill level is not a requirement; continuing to learn is. The path starts from zero and moves up step by step.'] },
+    { ar: ['ماذا أحتاج لأبدأ؟', 'حاسوب محمول، واتصال بالإنترنت، ورغبة صادقة في التعلّم.'], en: ['What do I need to start?', 'A laptop, an internet connection and a real wish to learn.'] },
+    { ar: ['كم يستغرق الطريق حتى الاحتراف؟', 'من 9 إلى 12 شهراً تقريباً، حسب التزامك ووقت تطبيقك. كل مرحلة لها اختبار قبل الانتقال للتي بعدها.'], en: ['How long does the path take?', 'About 9 to 12 months, depending on your commitment and practice time. Each phase ends with a test.'] },
+    { ar: ['هل ما سأتعلّمه قانوني وآمن؟', 'نعم. كل التطبيق يجري داخل مختبرات خاصة ومسابقات ومنصات تدريبية. لا نختبر نظاماً بدون إذن صاحبه.'], en: ['Is what I learn legal and safe?', 'Yes. All practice happens inside private labs, competitions and training platforms. We never test a system without its owner’s permission.'] },
+    { ar: ['كيف أنضم؟', 'أدخل مفتاح الدخول في هذه الصفحة ليُفتح رابط سيرفر ديسكورد، ثم اختر اسماً مستعاراً. للتواصل مع المؤسس، راسله على الإيميل.'], en: ['How do I join?', 'Solve the access challenge on this page to unlock the Discord link, then pick a handle. To reach the founder, write to him by email.'] }
+  ];
+
+  // ---------- language ----------
+  var EN = {
+    navName: 'Name', navFocus: 'Tracks', navRoad: 'Roadmap', navFounder: 'Founder', navGloss: 'Glossary', navJoin: 'Join', access: 'Access',
+    title: 'We protect what is not seen',
+    lead: 'QIQ is a new Iraqi cyber security team. We train in CTF competitions, build our own tools, and publish what we learn.',
+    tryAccess: 'Enter the key',
+    f1: 'Newly formed', f2: 'CTF · Dev · Edu', f3: 'Anonymous', f4: 'Iraq',
+    nameH: 'What QIQ means', nameP: 'The name is short for Quiet Iraqi. It also reads as quiet Iraqi intelligence.',
+    n1: 'We work without noise and let the result speak.', n2: "Iraq's country code. This is where we start, and who we write for.", n3: 'Understanding before tools. Questions before answers.',
+    focusH: 'What we work on', focusP: 'Three tracks. Each member picks one.',
+    c1h: 'CTF competitions', c1p: 'We practise web, cryptography, reverse engineering, forensics and binary exploitation challenges, and compete as one team.',
+    c2h: 'Development', c2p: 'We write our own tools and scripts. Whoever builds the tool knows how it works and where it fails.',
+    c3h: 'Education', c3p: 'We explain what we solve in articles and writeups, and help beginners take the first step.',
+    roadH: 'The roadmap', roadP: 'Five connected phases over 9 to 12 months, each building on the one before. This is the path a trainee walks with the founder.',
+    founderH: 'The founder', founderP: 'The only public name on the team, with his certifications as listed on his own site.',
+    founder: 'Ali A. Mezher', founderBio: 'Founder of QIQ and a cyber security trainer. He walks with the trainee from the first line in the terminal to the first real penetration test.',
+    s1: 'certifications', s2: 'phases', s3: 'months',
+    teamH: 'The team', teamP: 'A new team, and we do not claim otherwise. No achievements are listed here until they are real.',
+    memH: 'Members are anonymous', memP: 'A decision, not a gap. No names, no photos, no personal accounts.',
+    goalsH: 'Team goals', goalsP: 'Raise cyber security awareness in Iraq, build a complete and strong team that covers every CTF category, and share what we learn with those who start after us.',
+    glossH: 'Terms you will master', glossP: 'Press any card to see what it means in plain words.',
+    faqH: 'Questions that matter',
+    ctaH: 'The team is forming now', ctaP: 'If you are learning cyber security and want a team to train with, your place is on the Discord server. The server link opens after you solve the access challenge.',
+    l2: 'Copy the address and write to the founder',
+    foot: 'QIQ · Quiet Iraqi · Founded by Ali A. Mezher · Members are anonymous',
+    mTitle: 'Access key', mHint: 'Enter the access key to unlock the Discord server link. Hint: QIQ',
+    mUser: 'Handle (any name)', mKey: 'Access key', mBtn: 'Verify',
+    join: 'Join on Discord', open: 'Open the Discord server', locked: 'Discord is locked: enter the key', after: 'After this phase:', flip: 'flip'
+  };
+  var AR = { join: 'انضم عبر ديسكورد', open: 'ادخل سيرفر ديسكورد', locked: 'ديسكورد مقفل: أدخل المفتاح', after: 'بعد هذه المرحلة:', flip: 'اقلب' };
+  $$('[data-t]').forEach(function (e) { AR[e.getAttribute('data-t')] = e.textContent; });
+  var lang = 'ar';
+  try { if (localStorage.getItem('qiq-lang') === 'en') lang = 'en'; } catch (e) {}
+  function T(k) { return (lang === 'en' ? EN : AR)[k]; }
+
+  function renderDiscord() {
+    $$('[data-discord]').forEach(function (slot) {
+      slot.textContent = '';
+      var b = el(DISCORD_URL ? 'a' : 'button', 'btn ' + (DISCORD_URL ? 'btn-primary' : 'btn-ghost'));
+      if (DISCORD_URL) { b.href = DISCORD_URL; b.target = '_blank'; b.rel = 'noopener noreferrer'; }
+      else { b.type = 'button'; b.addEventListener('click', openModal); }
+      b.innerHTML = CHAT; b.appendChild(el('span', '', DISCORD_URL ? T(slot.getAttribute('data-label')) : T('locked')));
+      slot.appendChild(b);
+    });
+  }
+
+  var phase = 0;
+  function renderRoad() {
+    var tabs = $('#roadTabs'); tabs.textContent = '';
+    ROAD.forEach(function (p, i) {
+      var b = el('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === phase));
+      b.appendChild(el('b', '', '0' + (i + 1)));
+      var s = el('span', '', p[lang].t); s.appendChild(el('small', '', p.tag)); b.appendChild(s);
+      b.addEventListener('click', function () { phase = i; renderRoad(); });
+      tabs.appendChild(b);
+    });
+    var p = ROAD[phase][lang], panel = $('#roadPanel'); panel.textContent = '';
+    panel.appendChild(el('h3', '', p.t)); panel.appendChild(el('p', 'intro', p.d));
+    var ul = el('ul'); p.i.forEach(function (x) { ul.appendChild(el('li', '', x)); }); panel.appendChild(ul);
+    var out = el('p', 'out'); out.appendChild(el('b', '', T('after') + ' ')); out.appendChild(document.createTextNode(p.o)); panel.appendChild(out);
+    $('#roadBar').style.transform = 'scaleX(' + (phase + 1) / ROAD.length + ')';
+  }
+  function renderCerts() {
+    var box = $('#certs'); box.textContent = '';
+    CERTS.forEach(function (c) {
+      var d = el('div', 'card cert');
+      d.appendChild(el('span', 'code', c.c)); d.appendChild(el('h3', '', c.n)); d.appendChild(el('p', 'by', c.by)); d.appendChild(el('p', '', c[lang]));
+      box.appendChild(d);
+    });
+    bindTilt(box);
+  }
+  function renderGloss() {
+    var box = $('#gloss'); box.textContent = '';
+    GLOSS.forEach(function (g) {
+      var b = el('button', 'flip'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      var inn = el('span', 'flip-in'), f = el('span', 'flip-f'), back = el('span', 'flip-b', g[lang][1]);
+      f.appendChild(el('b', '', g.k)); f.appendChild(el('span', '', g[lang][0])); f.appendChild(el('small', '', T('flip') + ' ↻'));
+      inn.appendChild(f); inn.appendChild(back); b.appendChild(inn);
+      b.addEventListener('click', function () { b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); });
+      box.appendChild(b);
+    });
+  }
+  function renderFaq() {
+    var box = $('#faqList'); box.textContent = '';
+    FAQ.forEach(function (q, i) {
+      var item = el('div', 'faq-i'), btn = el('button', 'faq-q'), a = el('div', 'faq-a'), inner = el('div');
+      btn.type = 'button'; btn.id = 'fq' + i; btn.setAttribute('aria-expanded', 'false');
+      btn.appendChild(el('span', '', q[lang][0])); btn.appendChild(el('i'));
+      inner.appendChild(el('p', '', q[lang][1])); a.appendChild(inner);
+      btn.addEventListener('click', function () { var o = item.classList.toggle('open'); btn.setAttribute('aria-expanded', String(o)); });
+      item.appendChild(btn); item.appendChild(a); box.appendChild(item);
+    });
+  }
+  function applyLang(animate) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    $$('[data-t]').forEach(function (e) { e.textContent = T(e.getAttribute('data-t')); });
+    $('#langBtn').textContent = lang === 'ar' ? 'EN' : 'ع';
+    renderDiscord(); renderRoad(); renderCerts(); renderGloss(); renderFaq();
+    if (animate) scramble($('#title'));
+  }
+  $('#langBtn').addEventListener('click', function () {
+    lang = lang === 'ar' ? 'en' : 'ar';
+    try { localStorage.setItem('qiq-lang', lang); } catch (e) {}
+    applyLang(true);
+  });
+
+  // ---------- text decode ----------
+  function scramble(node) {
+    if (reduce || !node) return;
+    var full = node.textContent, glyphs = '█▓▒░', start = performance.now(), dur = 900;
+    cancelAnimationFrame(node._r);
+    (function tick(now) {
+      var k = Math.min(1, (now - start) / dur), n = Math.floor(full.length * k), out = full.slice(0, n);
+      for (var i = n; i < full.length; i++) out += full[i] === ' ' ? ' ' : glyphs[(Math.random() * 4) | 0];
+      node.textContent = out;
+      if (k < 1) node._r = requestAnimationFrame(tick); else node.textContent = full;
+    })(start);
+  }
+
+  // ---------- boot ----------
+  var boot = $('#boot'), booted = false;
+  function endBoot() { if (booted) return; booted = true; boot.classList.add('done'); scramble($('#title')); startTerminal(); }
+  (function () {
+    if (reduce) { endBoot(); return; }
+    var lines = ['<b>QIQ</b> secure shell v2.0', 'loading identity ......... <b>ok</b>', 'starting quiet mode ...... <b>ok</b>'], log = $('#bootLog'), n = 0;
+    requestAnimationFrame(function () { $('#bootBar').style.transform = 'scaleX(1)'; });
+    var t = setInterval(function () {
+      if (booted) return clearInterval(t);
+      log.innerHTML += (n ? '\n' : '') + '> ' + lines[n]; n++;
+      if (n === lines.length) { clearInterval(t); setTimeout(endBoot, 450); }
+    }, 320);
+    $('#bootSkip').addEventListener('click', endBoot);
+    setTimeout(endBoot, 3000);
+  })();
+
+  // ---------- one animation loop for everything that follows the pointer or the scroll ----------
+  var hero = $('#hero'), heroIn = $('#heroIn'), cur = $('#cur'), bar = $('#progress');
+  var ptr = { x: innerWidth / 2, y: innerHeight / 3, cx: innerWidth / 2, cy: innerHeight / 3, gx: 0, gy: 0, seen: false };
+  var tilts = [];
+  function bindTilt(root) {
+    if (reduce || !fine) return;
+    $$('.card', root).forEach(function (card) {
+      if (card._tilt) return;
+      var s = card._tilt = { el: card, rx: 0, ry: 0, tx: 0, ty: 0, lift: 0, tl: 0 };
+      tilts.push(s);
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        card.style.setProperty('--cx', x * 100 + '%'); card.style.setProperty('--cy', y * 100 + '%');
+        s.tx = (.5 - y) * 8; s.ty = (x - .5) * 8; s.tl = -6;
+      });
+      card.addEventListener('pointerleave', function () { s.tx = s.ty = s.tl = 0; });
+    });
+  }
+
+  // pixel rain: squares from the Q tail, moving continuously
+  var cv = $('#rain'), ctx = cv.getContext('2d'), S = 16, drops = [], W = 0, H = 0, heroVisible = true;
+  var COLORS = ['128,74,138', '128,74,138', '128,74,138', '90,36,112', '248,210,153', '245,158,81'];
+  function newDrop(d, top) {
+    d.y = top ? -Math.random() * H : Math.random() * H * 2 - H; d.v = 40 + Math.random() * 110; d.len = 4 + ((Math.random() * 9) | 0);
+    d.c = COLORS[(Math.random() * COLORS.length) | 0]; return d;
+  }
+  function sizeRain() {
+    var r = hero.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var cols = Math.ceil(W / S); drops = [];
+    for (var i = 0; i < cols; i++) if (i % 2 === 0 || Math.random() < .35) drops.push(newDrop({ x: i * S }, false));
+    drawRain(0);
+  }
+  function drawRain(dt) {
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < drops.length; i++) {
+      var d = drops[i]; d.y += d.v * dt;
+      if (d.y - d.len * S > H) newDrop(d, true);
+      for (var k = 0; k < d.len; k++) {
+        var y = d.y - k * S; if (y < -S || y > H) continue;
+        ctx.fillStyle = 'rgba(' + d.c + ',' + (0.85 * (1 - k / d.len)).toFixed(3) + ')';
+        ctx.fillRect(d.x + 2, y + 2, S - 4, S - 4);
+      }
+    }
+  }
+  sizeRain(); addEventListener('resize', sizeRain);
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { heroVisible = e[0].isIntersecting; }).observe(hero);
+
+  addEventListener('pointermove', function (e) {
+    ptr.x = e.clientX; ptr.y = e.clientY;
+    if (!ptr.seen && fine) { ptr.seen = true; cur.classList.add('on'); }
+    var t = e.target.closest ? e.target.closest('a, button, input, .card') : null;
+    cur.classList.toggle('big', !!t);
+  }, { passive: true });
+  document.addEventListener('pointerleave', function () { cur.classList.remove('on'); ptr.seen = false; });
+
+  var last = performance.now();
+  function loop(now) {
+    requestAnimationFrame(loop);
+    var dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (document.hidden) return;
+    var k = 1 - Math.pow(.001, dt); // frame-rate independent easing
+    var docH = document.documentElement.scrollHeight - innerHeight, sy = scrollY;
+    bar.style.transform = 'scaleX(' + (docH > 0 ? sy / docH : 0) + ')';
+    if (fine) { ptr.cx += (ptr.x - ptr.cx) * k * 2.2; ptr.cy += (ptr.y - ptr.cy) * k * 2.2; cur.style.transform = 'translate3d(' + ptr.cx + 'px,' + ptr.cy + 'px,0)'; }
+    if (heroVisible) {
+      var r = hero.getBoundingClientRect();
+      ptr.gx += (ptr.x - r.left - ptr.gx) * k; ptr.gy += (ptr.y - r.top - ptr.gy) * k;
+      hero.style.setProperty('--mx', ptr.gx + 'px'); hero.style.setProperty('--my', ptr.gy + 'px');
+      var p = Math.min(1, sy / (r.height || 1));
+      heroIn.style.transform = 'translate3d(0,' + (p * 60) + 'px,0)'; heroIn.style.opacity = String(1 - p * .7);
+      drawRain(dt);
+    }
+    for (var i = 0; i < tilts.length; i++) {
+      var s = tilts[i];
+      if (Math.abs(s.tx - s.rx) + Math.abs(s.ty - s.ry) + Math.abs(s.tl - s.lift) < .01) { if (!s.tx && !s.ty && s.el.style.transform) s.el.style.transform = ''; continue; }
+      s.rx += (s.tx - s.rx) * k * 1.6; s.ry += (s.ty - s.ry) * k * 1.6; s.lift += (s.tl - s.lift) * k * 1.6;
+      s.el.style.transform = 'perspective(800px) rotateX(' + s.rx.toFixed(2) + 'deg) rotateY(' + s.ry.toFixed(2) + 'deg) translateY(' + s.lift.toFixed(2) + 'px)';
+    }
+  }
+  if (!reduce) requestAnimationFrame(loop);
+  else addEventListener('scroll', function () { var h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0) + ')'; }, { passive: true });
+
+  // ---------- tickers ----------
+  function fill(id, items) { var h = items.concat(items).map(function (i) { return '<span>' + i + '</span>'; }).join(''); $(id).innerHTML = h + h; }
+  fill('#ticker', ['WEB', 'CRYPTO', 'REVERSE', 'FORENSICS', 'PWN', 'OSINT', 'RED TEAM', 'BLUE TEAM', 'BUG BOUNTY', 'QUIET IRAQI', 'CTF']);
+  fill('#tools', ['PYTHON', 'BASH', 'C++', 'C#', 'JAVASCRIPT', 'SQL', 'POWERSHELL', 'KALI LINUX', 'NMAP', 'WIRESHARK', 'BURP SUITE', 'METASPLOIT', 'HASHCAT', 'SPLUNK', 'WAZUH', 'ACTIVE DIRECTORY']);
+
+  // ---------- terminal ----------
+  var out = $('#termOut'), started = false;
+  function print(text, cls) { var p = el('p', cls || '', text); out.appendChild(p); out.scrollTop = out.scrollHeight; return p; }
+  var CMDS = {
+    help: function () { return [['whoami  about  focus  roadmap  certs  founder  members  goals  join  contact  login  lang  date  clear', 'hi']]; },
+    whoami: function () { return [['qiq // quiet iraqi']]; },
+    about: function () { return [[T('lead')]]; },
+    focus: function () { return [['ctf/   dev/   edu/', 'hi'], [T('focusP')]]; },
+    ls: function () { return [['focus/  roadmap/  certs.txt  founder.txt  members.txt  mission.txt', 'hi']]; },
+    roadmap: function () { return ROAD.map(function (p, i) { return ['0' + (i + 1) + '  ' + p[lang].t + '  [' + p.tag + ']', i === phase ? 'hi' : '']; }); },
+    certs: function () { return CERTS.map(function (c) { return ['[+] ' + c.n + ' · ' + c.by]; }); },
+    goals: function () { return [[T('goalsP')]]; },
+    mission: function () { return [[lang === 'ar' ? 'تطوير الوعي السيبراني في العراق' : 'raise cyber security awareness in Iraq']]; },
+    members: function () { return [['cat: members.txt: Permission denied', 'er']]; },
+    founder: function () { return [[T('founder') + ' — CEH v13 · OSCP · PNPT · PCPP · CCNA Cybersecurity', 'hi']]; },
+    join: function () { return DISCORD_URL ? [[DISCORD_URL, 'hi']] : [['discord: locked. run: login', 'er']]; },
+    contact: function () { return [['discord   ' + (DISCORD_URL || 'locked. run: login')], ['email     im.03@outlook.com']]; },
+    date: function () { return [[new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC']]; },
+    lang: function () { $('#langBtn').click(); return [['lang -> ' + lang, 'ok']]; },
+    login: function () { openModal(); return [['opening auth prompt...', 'hi']]; },
+    sudo: function () { return [['guest is not in the sudoers file. This incident will be reported.', 'er']]; },
+    flag: function () { return [['no flag here. run: login', 'er']]; },
+    clear: function () { out.textContent = ''; return []; }
+  };
+  function run(raw) {
+    var cmd = raw.trim().toLowerCase(); if (!cmd) return;
+    print(raw.trim(), 'c');
+    var key = cmd.replace(/^cat\s+/, '').replace(/\.txt$/, '').split(/\s+/)[0].replace(/\/$/, '');
+    if (/^ls\s+focus/.test(cmd)) key = 'focus';
+    if (/^ls\s+roadmap/.test(cmd)) key = 'roadmap';
+    var fn = CMDS[key];
+    (fn ? fn() : [['command not found: ' + key + '. type help', 'er']]).forEach(function (l) { print(l[0], l[1]); });
+  }
+  function startTerminal() {
+    if (started) return; started = true;
+    var script = ['whoami', 'cat mission.txt', 'ls focus/', 'cat members.txt'];
+    if (reduce) { script.forEach(run); return; }
+    var i = 0;
+    (function next() {
+      if (i >= script.length) { print('type help to explore_', 'hi'); return; }
+      var cmd = script[i++], p = print('', 'c'), k = 0;
+      (function type() {
+        p.textContent = cmd.slice(0, ++k);
+        if (k < cmd.length) return setTimeout(type, 38);
+        setTimeout(function () { out.removeChild(p); run(cmd); setTimeout(next, 320); }, 200);
+      })();
+    })();
+  }
+  $('#termForm').addEventListener('submit', function (e) { e.preventDefault(); var inp = $('#termInput'); run(inp.value); inp.value = ''; });
+  $('#term').addEventListener('click', function (e) { if (!e.target.closest('input, button')) $('#termInput').focus({ preventScroll: true }); });
+  ['help', 'roadmap', 'certs', 'contact', 'login', 'clear'].forEach(function (c) {
+    var b = el('button', '', c); b.type = 'button'; b.addEventListener('click', function () { run(c); }); $('#termKeys').appendChild(b);
+  });
+
+  // ---------- access challenge ----------
+  var modal = $('#modal'), box = $('#modalBox'), alog = $('#authLog'), lastFocus = null;
+  function openModal() { lastFocus = document.activeElement; modal.hidden = false; $('#authUser').focus(); }
+  function closeModal() { modal.hidden = true; if (lastFocus) lastFocus.focus(); }
+  $('#accessBtn').addEventListener('click', openModal);
+  $$('[data-open-access]').forEach(function (b) { b.addEventListener('click', openModal); });
+  $('#modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+  addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+  function logLines(lines, done) {
+    alog.textContent = ''; var i = 0;
+    (function next() {
+      if (i >= lines.length) return done && done();
+      alog.appendChild(el('span', lines[i][1] || '', (i ? '\n' : '') + '> ' + lines[i][0])); i++; setTimeout(next, reduce ? 0 : 300);
+    })();
+  }
+  function replay(cls) { box.classList.remove('shake', 'granted'); void box.offsetWidth; box.classList.add(cls); }
+  $('#authForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var user = $('#authUser').value.trim().replace(/[^\w.\-]/g, '') || 'guest';
+    var key = $('#authKey').value.trim().toLowerCase(), good = false;
+    try { good = btoa(key) === 'cWlx'; } catch (err) {}
+    logLines([['handshake with qiq-gate', ''], ['user: ' + user, ''], ['verifying key ........', '']], function () {
+      if (!good) {
+        logLines([['ACCESS DENIED', 'er'], [lang === 'ar' ? 'التلميح: QIQ' : 'hint: QIQ', 'hi']]);
+        replay('shake'); return;
+      }
+      logLines([['ACCESS GRANTED', 'ok'], ['welcome, ' + user, 'ok'], ['discord link unlocked', 'hi']], function () {
+        replay('granted'); unlock();
+        var rw = $('#authReward'); rw.hidden = false; rw.textContent = '';
+        var p = el('p', 'hint', lang === 'ar' ? 'تم الفتح. ادخل السيرفر من الزر.' : 'Unlocked. Open the server from the button.');
+        var slot = el('span'); slot.setAttribute('data-discord', ''); slot.setAttribute('data-label', 'open');
+        rw.appendChild(p); rw.appendChild(el('br')); rw.appendChild(slot); renderDiscord();
+      });
+    });
+  });
+
+  // ---------- first render, then reveal / counters / nav state ----------
+  applyLang(false);
+  bindTilt(document);
+
+  if (!reduce && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+    $$('.band h2, .band .sub, .band .label, .grid3 > *, .split > *, .road, .id, .cert, .flip, .faq-i, .cta-in > *').forEach(function (n) {
+      if (n.getBoundingClientRect().top < innerHeight) return; // already on screen: leave visible
+      var sibs = Array.prototype.slice.call(n.parentNode.children);
+      n.style.setProperty('--d', Math.min(sibs.indexOf(n), 5) * .08 + 's');
+      n.classList.add('pre'); io.observe(n);
+    });
+    var seen = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return; seen.unobserve(e.target);
+        var n = e.target, to = Number(n.getAttribute('data-count'));
+        if (!to) return scramble(n);
+        var t0 = performance.now();
+        (function tick(now) { var k = Math.min(1, (now - t0) / 1400), ease = 1 - Math.pow(1 - k, 4); n.textContent = String(Math.round(to * ease)); if (k < 1) requestAnimationFrame(tick); })(t0);
+      });
+    }, { threshold: .6 });
+    $$('.big, [data-count]').forEach(function (n) { seen.observe(n); });
+    var links = $$('.nav a'), spy = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); }); });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    $$('main section[id]').forEach(function (s) { spy.observe(s); });
+  }
+  console.log('%cQIQ', 'font:800 28px monospace;color:#F8D299;background:#3A0353;padding:6px 14px', '\nLooking around is the right instinct. Try: login');
 })();
-const shareLink = () => location.href.split('#')[0] + '#s=' + b64e(window.API_URL);
-class NetError extends Error {}
-async function api(action, data = {}) {
-  let res;
-  try {
-    res = await fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action, token: S.token, ...data }) });
-  } catch (e) { throw new NetError('ماكو اتصال بالإنترنت'); }
-  let j;
-  try { j = await res.json(); } catch (e) { throw new NetError('الخادم ما جاوب، حاول مرة ثانية'); }
-  if (!j.ok) {
-    if (/انتهت الجلسة|موقوف/.test(j.error || '')) { signOut(); }
-    throw new Error(j.error || 'صار خطأ');
-  }
-  return j;
-}
-function setSession(r) { S.token = r.token; S.user = r.user; store.set('token', S.token); store.set('user', S.user); }
-function signOut() {
-  S.token = ''; S.user = null; store.del('token'); store.del('user');
-  S.timers.forEach(clearInterval); S.timers = [];
-  if (S.watch != null) { navigator.geolocation.clearWatch(S.watch); S.watch = null; }
-  $('#gps').hidden = true; $('#logout').hidden = true;
-  viewLogin();
-}
-$('#logout').onclick = signOut;
-function msg(el, text, kind = 'err') { el.className = 'msg ' + kind; el.textContent = text; el.hidden = !text; }
-async function busy(btn, fn) {
-  const t = btn.textContent; btn.disabled = true; btn.textContent = 'لحظة…';
-  try { return await fn(); } finally { btn.disabled = false; btn.textContent = t; }
-}
-
-/* ================= البداية ================= */
-async function boot() {
-  if (!window.API_URL) {
-    app.innerHTML = `<form class="card center" id="f"><h2>ربط الموقع بالخادم</h2>
-      <p class="muted">هذي الخطوة للمسؤول فقط ومرة وحدة. الصق رابط Web app من Google Apps Script (ينتهي بـ /exec). إذا إنت مندوب، اطلب من المسؤول رابط المندوبين.</p>
-      <label>رابط الخادم<input id="api-url" class="ltr" required placeholder="https://script.google.com/macros/s/.../exec"></label>
-      <div id="m" hidden></div><button class="btn primary">ربط</button></form>`;
-    $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
-      const u = $('#api-url').value.trim();
-      if (!okApi(u)) return msg($('#m'), 'الرابط لازم يبدي بـ https://script.google.com وينتهي بـ /exec');
-      window.API_URL = u;
-      try { await api('status'); store.set('api', u); boot(); }
-      catch (e) { window.API_URL = ''; msg($('#m'), 'الرابط ما جاوب. تأكد إن النشر Web app والوصول Anyone.'); }
-    }); };
-    return;
-  }
-  if (S.token && S.user) return S.user.role === 'admin' ? viewAdmin() : viewAgent();
-  try {
-    const st = await api('status');
-    st.hasAdmin ? viewLogin() : viewInit();
-  } catch (e) {
-    app.innerHTML = `<div class="card center"><div class="msg err">${esc(e.message)}</div><button class="btn" onclick="location.reload()">إعادة المحاولة</button></div>`;
-  }
-}
-function viewInit() {
-  $('#title').textContent = 'متابعة المندوبين';
-  app.innerHTML = `<form class="card center" id="f">
-    <h2>إنشاء حساب المسؤول</h2>
-    <p class="muted">هذي أول مرة ينفتح الموقع. سوّي حسابك كمسؤول، وبعدها تضيف المندوبين من لوحتك.</p>
-    <label>اسمك<input id="in-name" required autocomplete="name"></label>
-    <label>رقم موبايلك<input id="in-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
-    <label>رمز سري (4 إلى 8 أرقام)<input id="in-pin" required inputmode="numeric" type="password" minlength="4" maxlength="8"></label>
-    <div id="m" hidden></div>
-    <button class="btn primary">إنشاء الحساب</button></form>`;
-  $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
-    try { setSession(await api('init', { name: $('#in-name').value, phone: $('#in-phone').value, pin: $('#in-pin').value })); viewAdmin(); }
-    catch (e) { msg($('#m'), e.message); }
-  }); };
-}
-function viewLogin() {
-  $('#title').textContent = 'متابعة المندوبين';
-  app.innerHTML = `<form class="card center" id="f">
-    <h2>تسجيل الدخول</h2>
-    <label>رقم الموبايل<input id="lg-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX" autocomplete="username"></label>
-    <label>الرمز السري<input id="lg-pin" required inputmode="numeric" type="password" autocomplete="current-password"></label>
-    <div id="m" hidden></div>
-    <button class="btn primary">دخول</button>
-    <p class="muted">ما عندك رمز؟ اطلبه من المسؤول.</p></form>`;
-  $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
-    try { setSession(await api('login', { phone: $('#lg-phone').value, pin: $('#lg-pin').value })); boot(); }
-    catch (e) { msg($('#m'), e.message); }
-  }); };
-}
-
-/* ================= الموقع الجغرافي ================= */
-let lastSent = { t: 0, lat: 0, lng: 0 };
-function meters(a, b) {
-  const R = 6371000, r = x => x * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-function gpsPill(on, text) { const g = $('#gps'); g.hidden = false; g.className = 'gps ' + (on ? 'on' : 'offl'); g.textContent = text; }
-function startTracking() {
-  if (!navigator.geolocation) return gpsPill(false, 'الموبايل ما يدعم الموقع');
-  gpsPill(false, 'جاري تحديد الموقع');
-  S.watch = navigator.geolocation.watchPosition(p => {
-    S.pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), t: Date.now() };
-    gpsPill(true, 'الموقع شغال');
-    maybePing();
-  }, err => {
-    gpsPill(false, err.code === 1 ? 'اسمح بالموقع' : 'الموقع غير متوفر');
-  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
-  S.timers.push(setInterval(maybePing, 60000));
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) maybePing(); });
-}
-async function maybePing(force) {
-  if (!S.pos || !S.token || S.user.role === 'admin') return;
-  const since = Date.now() - lastSent.t, moved = meters(lastSent, S.pos);
-  // كل 5 دقايق إذا تحرك أكثر من 40 متر، أو كل 15 دقيقة حتى لو واقف
-  if (!force && !(since > 15 * 60e3 || (since > 5 * 60e3 && moved > 40))) return;
-  lastSent = { t: Date.now(), lat: S.pos.lat, lng: S.pos.lng };
-  try { await api('ping', S.pos); } catch (e) { lastSent.t = Date.now() - 4 * 60e3; }
-}
-function freshPos() {
-  return new Promise(res => {
-    if (S.pos && Date.now() - S.pos.t < 60000) return res(S.pos);
-    if (!navigator.geolocation) return res(null);
-    navigator.geolocation.getCurrentPosition(p => {
-      S.pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), t: Date.now() };
-      res(S.pos);
-    }, () => res(S.pos), { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
-  });
-}
-let wake = null;
-async function setWake(on) {
-  try {
-    if (on && navigator.wakeLock) wake = await navigator.wakeLock.request('screen');
-    else if (wake) { await wake.release(); wake = null; }
-  } catch (e) { wake = null; }
-  return !!wake;
-}
-
-/* ================= شاشة المندوب ================= */
-let draft = null;
-function viewAgent() {
-  $('#title').textContent = S.user.name;
-  $('#logout').hidden = false;
-  app.innerHTML = `
-    <div class="stats" id="stats"><div class="stat"><b>–</b><span>اليوم</span></div><div class="stat"><b>–</b><span>هذا الأسبوع</span></div><div class="stat"><b>–</b><span>هذا الشهر</span></div></div>
-    <div id="queue" hidden></div>
-    <button class="btn primary big" id="new">تسجيل محل جديد</button>
-    <section class="card" id="form" hidden></section>
-    <section class="card"><h2>آخر المحلات</h2><div class="list" id="recent"><p class="muted">جاري التحميل…</p></div></section>
-    <section class="card">
-      <h2>مشاركة الموقع</h2>
-      <p class="muted">موقعك ينرسل للمسؤول طول ما هذي الصفحة مفتوحة. إذا قفلت الموبايل أو طلعت من الصفحة يتوقف الإرسال، ويرجع من تفتحها.</p>
-      <div class="row"><button class="btn" id="here">دز موقعي هسه</button><button class="btn" id="wake">خلّي الشاشة شغالة</button></div>
-      <div id="locMsg" hidden></div>
-    </section>`;
-  $('#new').onclick = openForm;
-  $('#here').onclick = () => busy($('#here'), async () => {
-    const p = await freshPos();
-    if (!p) return msg($('#locMsg'), 'ما كدرنا نحدد موقعك. فعّل الموقع (GPS) واسمح للمتصفح.');
-    await maybePing(true); msg($('#locMsg'), 'انرسل موقعك للمسؤول.', 'good');
-  });
-  $('#wake').onclick = async () => {
-    const on = await setWake(!wake);
-    $('#wake').textContent = on ? 'الشاشة تبقى شغالة ✓' : 'خلّي الشاشة شغالة';
-    if (!on && !navigator.wakeLock) msg($('#locMsg'), 'هذا المتصفح ما يدعم إبقاء الشاشة شغالة.', 'warn');
-  };
-  startTracking();
-  loadMe(); flushQueue();
-  S.timers.push(setInterval(flushQueue, 60000));
-  window.addEventListener('online', flushQueue);
-}
-async function loadMe() {
-  try {
-    const r = await api('me');
-    const live = r.month.ok + r.month.pending;
-    $('#stats').innerHTML = `
-      <div class="stat"><b>${num(r.today)}</b><span>اليوم</span></div>
-      <div class="stat"><b>${num(r.week)}</b><span>الأسبوع من ${r.weekTarget}</span></div>
-      <div class="stat"><b>${num(live)}</b><span>الشهر (${num(r.month.ok)} مقبول)</span></div>`;
-    $('#recent').innerHTML = r.recent.length ? r.recent.map(s => `<div class="item"><div class="grow">
-        <div class="t">${esc(s.shopName)}</div>
-        <div class="muted"><span class="ltr">${esc(s.serial)}</span> · ${fmtTime(s.ts)}</div>
-        ${s.status === 'rejected' && s.note ? `<div class="muted">سبب الرفض: ${esc(s.note)}</div>` : ''}
-      </div><span class="chip ${s.status}">${STATUS[s.status] || s.status}</span></div>`).join('')
-      : '<p class="muted">بعد ما سجّلت أي محل. اضغط "تسجيل محل جديد" وابدأ.</p>';
-  } catch (e) { if (S.token) $('#recent').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
-}
-function renderQueue() {
-  const q = $('#queue'); if (!q) return;
-  q.hidden = !S.queue.length && !S.lastQueueError;
-  q.className = 'msg ' + (S.lastQueueError ? 'err' : 'warn');
-  q.textContent = S.lastQueueError ? 'محل محفوظ ما انقبل من الخادم: ' + S.lastQueueError
-    : S.queue.length ? `${S.queue.length} محل محفوظ بالموبايل وينتظر الإنترنت. لا تمسح بيانات المتصفح.` : '';
-}
-async function flushQueue() {
-  renderQueue();
-  if (S.flushing || !S.queue.length || !S.token) return;
-  S.flushing = true;
-  let sent = false;
-  while (S.queue.length) {
-    try { await api('addShop', S.queue[0]); sent = true; }
-    catch (e) { if (e instanceof NetError) break; S.lastQueueError = e.message; }
-    S.queue.shift(); store.set('queue', S.queue);
-  }
-  S.flushing = false; renderQueue();
-  if (sent) loadMe();
-}
-
-function openForm() {
-  draft = { qr: '', photo: '' };
-  $('#new').hidden = true;
-  const f = $('#form'); f.hidden = false;
-  f.innerHTML = `<h2>محل جديد</h2>
-    <label>اسم المحل (مثل ما مكتوب بسوبر كي)<input id="sh-name" autocomplete="off"></label>
-    <div class="row"><button class="btn" id="sh-scan" type="button">مسح باركود الستاند</button></div>
-    <div id="sh-code" hidden></div>
-    <label>الرقم التسلسلي فوق الباركود<input id="sh-serial" class="ltr" placeholder="uvb-325199" autocapitalize="off" autocomplete="off"></label>
-    <label class="btn" style="align-items:center">صوّر صورة التوثيق
-      <input id="sh-photo" type="file" accept="image/*" capture="environment" hidden></label>
-    <p class="muted">موبايل صاحب المحل بوضع "أعمال" جنب الستاند، والرقم التسلسلي واضح.</p>
-    <img id="sh-prev" class="preview" alt="صورة التوثيق" hidden>
-    <div id="sh-msg" hidden></div>
-    <div class="row"><button class="btn primary" id="sh-save" type="button">حفظ المحل</button><button class="btn fit" id="sh-cancel" type="button">إلغاء</button></div>`;
-  $('#sh-cancel').onclick = closeForm;
-  $('#sh-scan').onclick = openScanner;
-  $('#sh-serial').onchange = checkCode;
-  $('#sh-photo').onchange = onPhoto;
-  $('#sh-save').onclick = () => busy($('#sh-save'), saveShop);
-  f.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-function closeForm() { $('#form').hidden = true; $('#form').innerHTML = ''; $('#new').hidden = false; draft = null; }
-async function checkCode() {
-  const serial = $('#sh-serial').value.trim(), box = $('#sh-code');
-  if (!serial) return;
-  try {
-    const r = await api('checkCode', { serial });
-    if (!draft) return;
-    if (r.dup) msg(box, `هذا الستاند مسجّل من قبل: ${r.dup.shopName}، ${r.dup.agentName}، ${r.dup.day}`, 'err');
-    else msg(box, (draft.qr ? 'الباركود ينقري وهو جديد، ما مسجّل من قبل.' : 'الرقم التسلسلي جديد، ما مسجّل من قبل.'), 'good');
-  } catch (e) { if (draft && draft.qr) msg(box, 'الباركود ينقري. ما كدرنا نتأكد إذا مسجّل من قبل (ماكو إنترنت).', 'warn'); }
-}
-function loadImage(file) {
-  return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); });
-}
-async function onPhoto(ev) {
-  const file = ev.target.files[0]; if (!file) return;
-  try {
-    const img = await loadImage(file), max = 1100, k = Math.min(1, max / Math.max(img.width, img.height));
-    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-    const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(img, 0, 0, c.width, c.height);
-    draft.photo = c.toDataURL('image/jpeg', 0.6);
-    $('#sh-prev').src = draft.photo; $('#sh-prev').hidden = false;
-    if (!draft.qr && window.jsQR) {
-      const d = ctx.getImageData(0, 0, c.width, c.height), hit = jsQR(d.data, d.width, d.height);
-      if (hit && hit.data) { draft.qr = hit.data; if ($('#sh-serial').value.trim()) checkCode(); else msg($('#sh-code'), 'الباركود ينقري من الصورة. اكتب الرقم التسلسلي.', 'good'); }
-    }
-  } catch (e) { msg($('#sh-msg'), 'ما كدرنا نقرا الصورة، صوّر مرة ثانية.'); }
-}
-async function saveShop() {
-  const m = $('#sh-msg'), shopName = $('#sh-name').value.trim(), serial = $('#sh-serial').value.trim();
-  if (!shopName) return msg(m, 'اكتب اسم المحل.');
-  if (!serial) return msg(m, 'اكتب الرقم التسلسلي للستاند، أو امسح الباركود.');
-  if (!draft.photo) return msg(m, 'صوّر صورة التوثيق.');
-  const p = await freshPos();
-  const data = { shopName, serial, qr: draft.qr, photo: draft.photo, lat: p ? p.lat : '', lng: p ? p.lng : '', acc: p ? p.acc : '' };
-  try {
-    await api('addShop', data);
-    closeForm(); loadMe(); maybePing(true);
-  } catch (e) {
-    if (!(e instanceof NetError)) return msg(m, e.message);
-    S.queue.push(data);
-    if (!store.set('queue', S.queue)) { S.queue.pop(); return msg(m, 'ماكو إنترنت وذاكرة الموبايل ممتلية. انتظر الإنترنت وحاول.'); }
-    closeForm(); renderQueue();
-  }
-}
-
-/* ---------- مسح الباركود بالكاميرا ---------- */
-let scanStream = null, scanOn = false;
-async function openScanner() {
-  const box = $('#sh-code');
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return msg(box, 'المتصفح ما يفتح الكاميرا. اكتب الرقم التسلسلي بإيدك، والباركود ينقري من صورة التوثيق.', 'warn');
-  try { scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false }); }
-  catch (e) { return msg(box, 'ما انفتحت الكاميرا. اسمح للمتصفح بالكاميرا، أو اكتب الرقم التسلسلي بإيدك.', 'warn'); }
-  const v = $('#video'); v.srcObject = scanStream; await v.play();
-  $('#scan').hidden = false; scanOn = true; $('#scanMsg').textContent = 'وجّه الكاميرا على باركود الستاند';
-  let det = null;
-  if ('BarcodeDetector' in window) {
-    try {
-      const sup = await BarcodeDetector.getSupportedFormats();
-      const want = ['qr_code', 'code_128', 'code_39', 'code_93'].filter(f => sup.includes(f));
-      if (want.includes('qr_code')) det = new BarcodeDetector({ formats: want });
-    } catch (e) { det = null; }
-  }
-  const c = document.createElement('canvas'), ctx = c.getContext('2d', { willReadFrequently: true });
-  let qr = '', serial = '', qrAt = 0;
-  const tick = async () => {
-    if (!scanOn) return;
-    if (v.readyState >= 2 && v.videoWidth) {
-      try {
-        if (det) {
-          for (const b of await det.detect(v)) {
-            if (b.format === 'qr_code') qr = qr || b.rawValue; else if (b.rawValue) serial = serial || b.rawValue;
-          }
-        } else if (window.jsQR) {
-          const k = Math.min(1, 720 / v.videoWidth); c.width = v.videoWidth * k; c.height = v.videoHeight * k;
-          ctx.drawImage(v, 0, 0, c.width, c.height);
-          const d = ctx.getImageData(0, 0, c.width, c.height), hit = jsQR(d.data, d.width, d.height);
-          if (hit && hit.data) qr = hit.data;
-        }
-      } catch (e) {}
-      if (qr && !qrAt) { qrAt = Date.now(); $('#scanMsg').textContent = 'انقرا الباركود ✓'; if (navigator.vibrate) navigator.vibrate(80); }
-      // بعد قراءة QR ننتظر ثانيتين للرقم التسلسلي (الباركود الخطي) إذا المتصفح يدعمه
-      if (qr && (serial || !det || Date.now() - qrAt > 2000)) return finishScan(qr, serial);
-    }
-    setTimeout(tick, 150);
-  };
-  tick();
-}
-function closeScanner() {
-  scanOn = false; $('#scan').hidden = true;
-  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-}
-$('#scanClose').onclick = closeScanner;
-function finishScan(qr, serial) {
-  closeScanner();
-  if (!draft) return;
-  draft.qr = qr;
-  const inp = $('#sh-serial');
-  if (serial && !inp.value.trim()) inp.value = serial;
-  if (inp.value.trim()) checkCode();
-  else { msg($('#sh-code'), 'الباركود ينقري. اكتب الرقم التسلسلي المكتوب فوقه.', 'good'); inp.focus(); }
-}
-$('#zoomClose').onclick = () => { $('#zoom').hidden = true; };
-
-/* ================= لوحة المسؤول ================= */
-const A = { tab: 'now', agents: [], photos: new Map(), map: null, layer: null, filt: { day: '', agentId: '', status: 'pending' }, offset: 0 };
-function viewAdmin() {
-  $('#title').textContent = 'لوحة المسؤول';
-  $('#logout').hidden = false;
-  app.innerHTML = `<div class="tabs" role="tablist">
-      <button data-t="now">الآن</button><button data-t="shops">المحلات</button><button data-t="month">عد الشهر</button><button data-t="agents">المندوبين</button>
-    </div><div id="pane" style="display:flex;flex-direction:column;gap:16px"></div>`;
-  app.querySelectorAll('.tabs button').forEach(b => b.onclick = () => adminTab(b.dataset.t));
-  S.timers.push(setInterval(() => { if (A.tab === 'now' && !document.hidden) loadNow(true); }, 60000));
-  adminTab('now');
-}
-function adminTab(t) {
-  A.tab = t; A.map = null;
-  app.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
-  ({ now: tabNow, shops: tabShops, month: tabMonth, agents: tabAgents })[t]();
-}
-const pane = () => $('#pane');
-function paneError(e) { pane().innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
-
-/* ---- الآن ---- */
-function tabNow() {
-  pane().innerHTML = `<section class="card"><h2>مواقع المندوبين</h2><div id="map"></div>
-      <p class="muted" id="mapNote">النقاط الصفراء محلات اليوم. اضغط على اسم مندوب حتى تشوف مساره اليوم.</p></section>
-    <section class="card"><h2>شغل اليوم</h2><div class="list" id="nowList"><p class="muted">جاري التحميل…</p></div></section>`;
-  loadNow();
-}
-async function loadNow(quiet) {
-  let r;
-  try { r = await api('admin.overview'); } catch (e) { if (!quiet) paneError(e); return; }
-  if (A.tab !== 'now') return;
-  A.agents = r.agents;
-  const agents = r.agents.filter(a => a.role !== 'admin' && a.active).sort((x, y) => y.today - x.today);
-  $('#nowList').innerHTML = agents.length ? agents.map(a => `<div class="item"><div class="grow">
-      <div class="t"><a href="#" data-track="${esc(a.id)}">${esc(a.name)}</a></div>
-      <div class="muted">${a.lastLat != null ? 'آخر موقع ' + ago(a.lastAt) : 'ما دز موقع بعد'} · الشهر ${num(a.month)}${a.pending ? ' · ' + num(a.pending) + ' بانتظار تدقيقك' : ''}</div>
-      </div>${a.lastLat != null ? `<a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${a.lastLat},${a.lastLng}">خرائط</a>` : ''}
-      <b style="font-size:1.4rem;font-variant-numeric:tabular-nums">${num(a.today)}</b></div>`).join('')
-    : '<p class="muted">ماكو مندوبين بعد. أضفهم من تبويب "المندوبين".</p>';
-  $('#nowList').querySelectorAll('[data-track]').forEach(l => l.onclick = ev => { ev.preventDefault(); showTrack(l.dataset.track); });
-  drawMap(agents, r.points);
-}
-function drawMap(agents, points) {
-  if (!window.L) { $('#map').hidden = true; $('#mapNote').textContent = 'الخريطة ما حمّلت. استخدم زر "خرائط" يم كل مندوب.'; return; }
-  if (!A.map) {
-    A.map = L.map('map').setView([33.3, 44.4], 6);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(A.map);
-    A.layer = L.layerGroup().addTo(A.map); A.fitted = false;
-  }
-  A.layer.clearLayers();
-  const b = [];
-  points.forEach(p => { L.circleMarker([p.lat, p.lng], { radius: 5, color: '#8a6100', fillColor: '#ffd400', fillOpacity: 1, weight: 1 }).bindPopup(`${esc(p.shopName)}<br>${esc(p.agentName)}`).addTo(A.layer); b.push([p.lat, p.lng]); });
-  agents.forEach(a => { if (a.lastLat == null) return;
-    L.circleMarker([a.lastLat, a.lastLng], { radius: 9, color: '#fff', fillColor: '#1b1a14', fillOpacity: 1, weight: 2 }).bindTooltip(a.name, { permanent: true, direction: 'top' }).bindPopup(`${esc(a.name)}<br>${ago(a.lastAt)}`).addTo(A.layer);
-    b.push([a.lastLat, a.lastLng]); });
-  if (b.length && !A.fitted) { A.map.fitBounds(b, { padding: [30, 30], maxZoom: 16 }); A.fitted = true; }
-}
-async function showTrack(agentId) {
-  if (!A.map) return;
-  try {
-    const r = await api('admin.track', { agentId });
-    if (A.line) A.map.removeLayer(A.line);
-    const pts = r.points.map(p => [p.lat, p.lng]);
-    if (pts.length < 2) { $('#mapNote').textContent = 'ماكو مسار كافي لهذا المندوب اليوم.'; return; }
-    A.line = L.polyline(pts, { color: '#b3261e', weight: 3 }).addTo(A.map);
-    A.map.fitBounds(A.line.getBounds(), { padding: [30, 30] });
-    $('#mapNote').textContent = `المسار: ${pts.length} نقطة، من ${fmtTime(r.points[0].ts)} إلى ${fmtTime(r.points[pts.length - 1].ts)}.`;
-    $('#map').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch (e) { $('#mapNote').textContent = e.message; }
-}
-
-/* ---- المحلات ---- */
-async function ensureAgents() { if (!A.agents.length) A.agents = (await api('admin.overview')).agents; }
-async function tabShops() {
-  pane().innerHTML = '<p class="muted">جاري التحميل…</p>';
-  try { await ensureAgents(); } catch (e) { return paneError(e); }
-  if (A.tab !== 'shops') return;
-  if (!A.filt.month) A.filt.month = bagDay().slice(0, 7);
-  pane().innerHTML = `<section class="card"><div class="row">
-      <label>الشهر<input type="month" id="fl-month" value="${A.filt.month}"></label>
-      <label>اليوم<input type="date" id="fl-day" value="${A.filt.day}"></label>
-      <label>المندوب<select id="fl-agent"><option value="">الكل</option>${A.agents.map(a => `<option value="${esc(a.id)}"${a.id === A.filt.agentId ? ' selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
-      <label>الحالة<select id="fl-status"><option value="">الكل</option>${Object.keys(STATUS).map(k => `<option value="${k}"${k === A.filt.status ? ' selected' : ''}>${STATUS[k]}</option>`).join('')}</select></label>
-    </div><p class="muted" id="shopCount"></p></section>
-    <section class="card"><div id="shopList"></div><button class="btn" id="more" hidden>عرض أكثر</button></section>`;
-  const upd = () => { A.filt = { month: $('#fl-month').value, day: $('#fl-day').value, agentId: $('#fl-agent').value, status: $('#fl-status').value };
-    if (A.filt.day) { A.filt.month = A.filt.day.slice(0, 7); $('#fl-month').value = A.filt.month; } loadShops(true); };
-  ['#fl-month', '#fl-day', '#fl-agent', '#fl-status'].forEach(s => $(s).onchange = upd);
-  $('#more').onclick = () => loadShops(false);
-  loadShops(true);
-}
-const photoObs = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { photoObs.unobserve(e.target); loadPhoto(e.target); } }), { rootMargin: '300px' }) : null;
-async function loadPhoto(img) {
-  const id = img.dataset.pid; if (!id) return;
-  try {
-    if (!A.photos.has(id)) A.photos.set(id, (await api('admin.photo', { photoId: id })).data);
-    img.src = A.photos.get(id);
-  } catch (e) { img.alt = 'ما تحمّلت الصورة'; }
-}
-async function loadShops(reset) {
-  if (reset) { A.offset = 0; $('#shopList').innerHTML = '<p class="muted">جاري التحميل…</p>'; }
-  let r;
-  try { r = await api('admin.shops', { ...A.filt, offset: A.offset }); } catch (e) { $('#shopList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
-  if (A.tab !== 'shops') return;
-  if (reset) $('#shopList').innerHTML = '';
-  $('#shopCount').textContent = `${num(r.total)} محل`;
-  if (!r.total) $('#shopList').innerHTML = '<p class="muted">ماكو محلات بهذا الفلتر.</p>';
-  const month = A.filt.month;
-  r.shops.forEach(s => {
-    const el = document.createElement('div'); el.className = 'shop';
-    el.innerHTML = `<img data-pid="${esc(s.photoId)}" alt="صورة التوثيق" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
-      <div class="meta"><div class="t" style="font-weight:600">${esc(s.shopName)}</div>
-      <div><span class="ltr">${esc(s.serial)}</span> <span class="chip ${esc(s.status)}" data-chip>${STATUS[s.status] || esc(s.status)}</span></div>
-      <div class="muted">${esc(s.agentName)} · ${fmtTime(s.ts)}</div>
-      <div class="muted">${s.lat != null ? `<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${s.lat},${s.lng}">موقع التسجيل</a>` : '<span class="chip rejected">بدون موقع</span>'}
-        · ${s.qr ? 'الباركود مقري' : '<span class="chip pending">الباركود ما انمسح</span>'}</div>
-      <div class="muted" data-note>${esc(s.note)}</div>
-      <div class="row"><button class="btn sm ok">قبول</button><button class="btn sm bad">رفض</button></div>
-      <div class="row" data-rej hidden><input placeholder="سبب الرفض (يشوفه المندوب)"><button class="btn sm bad fit">تأكيد الرفض</button></div></div>`;
-    const img = $('img', el); img.onclick = () => { if (A.photos.has(s.photoId)) { $('#zoomImg').src = A.photos.get(s.photoId); $('#zoom').hidden = false; } };
-    photoObs ? photoObs.observe(img) : loadPhoto(img);
-    const set = async (btn, status, note) => busy(btn, async () => {
-      try { await api('admin.review', { month, id: s.id, status, note });
-        const c = $('[data-chip]', el); c.className = 'chip ' + status; c.textContent = STATUS[status]; $('[data-note]', el).textContent = note || ''; $('[data-rej]', el).hidden = true;
-      } catch (e) { $('[data-note]', el).textContent = e.message; }
-    });
-    const [okB, badB] = el.querySelectorAll('.row:not([data-rej]) button');
-    okB.onclick = () => set(okB, 'ok', '');
-    badB.onclick = () => { $('[data-rej]', el).hidden = false; $('[data-rej] input', el).focus(); };
-    $('[data-rej] button', el).onclick = ev => set(ev.target, 'rejected', $('[data-rej] input', el).value.trim() || 'الصورة غير مقبولة');
-    $('#shopList').appendChild(el);
-  });
-  A.offset += r.shops.length;
-  $('#more').hidden = A.offset >= r.total;
-}
-
-/* ---- عد الشهر ---- */
-function tabMonth() {
-  const m = A.month || bagDay().slice(0, 7);
-  pane().innerHTML = `<section class="card"><div class="row"><label>الشهر<input type="month" id="mo" value="${m}"></label><button class="btn fit" id="copy">نسخ الجدول</button></div>
-    <p class="muted">الأجر ينحسب على المحلات المقبولة فقط: 1,000 دينار للمحل، و1,250 لكل محل فوق 672.</p>
-    <div class="scroll" id="moTable"><p class="muted">جاري التحميل…</p></div><div id="moMsg" hidden></div></section>`;
-  $('#mo').onchange = () => { A.month = $('#mo').value; loadMonth(); };
-  $('#copy').onclick = async () => {
-    try { await navigator.clipboard.writeText(A.monthText || ''); msg($('#moMsg'), 'انتسخ الجدول.', 'good'); }
-    catch (e) { msg($('#moMsg'), 'ما كدرنا ننسخ. حدد الجدول وانسخه بإيدك.', 'warn'); }
-  };
-  loadMonth();
-}
-async function loadMonth() {
-  let r;
-  try { r = await api('admin.month', { month: $('#mo').value }); } catch (e) { $('#moTable').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
-  if (A.tab !== 'month') return;
-  const sum = k => r.rows.reduce((t, x) => t + x[k], 0);
-  $('#moTable').innerHTML = r.rows.length ? `<table><thead><tr><th>المندوب</th><th>مقبول</th><th>بانتظار</th><th>مرفوض</th><th>الأجر (دينار)</th></tr></thead><tbody>
-    ${r.rows.map(x => `<tr><td>${esc(x.name)}</td><td><b>${num(x.ok)}</b></td><td>${num(x.pending)}</td><td>${num(x.rejected)}</td><td><b>${num(x.pay)}</b></td></tr>`).join('')}
-    <tr><th>المجموع</th><th>${num(sum('ok'))}</th><th>${num(sum('pending'))}</th><th>${num(sum('rejected'))}</th><th>${num(sum('pay'))}</th></tr></tbody></table>
-    ${sum('pending') ? `<p class="msg warn">بعد ${num(sum('pending'))} محل بانتظار تدقيقك. دققها قبل ما تعتمد الأجور.</p>` : ''}`
-    : '<p class="muted">ماكو مندوبين بعد.</p>';
-  A.monthText = `عد شهر ${r.month}\n` + r.rows.map(x => `${x.name}: ${x.ok} مقبول، ${x.pending} بانتظار، ${x.rejected} مرفوض، الأجر ${num(x.pay)} دينار`).join('\n') + `\nالمجموع: ${sum('ok')} محل، ${num(sum('pay'))} دينار`;
-}
-
-/* ---- المندوبين ---- */
-async function tabAgents() {
-  pane().innerHTML = `<form class="card" id="af"><h2>إضافة مندوب</h2><div class="row">
-      <label>الاسم<input id="ag-name" required></label>
-      <label>رقم الموبايل<input id="ag-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
-      <label>الرمز السري<input id="ag-pin" required inputmode="numeric" minlength="4" maxlength="8" class="ltr" placeholder="4 أرقام"></label></div>
-      <div id="agMsg" hidden></div><button class="btn primary">إضافة</button></form>
-    <section class="card"><h2>رابط المندوبين</h2><p class="muted">دز هذا الرابط لكل مندوب ويّه رمزه. يفتحه بموبايله ويدخل مباشرة.</p>
-      <input id="share" class="ltr" readonly><button class="btn" id="shareCopy" type="button">نسخ الرابط</button><div id="shareMsg" hidden></div></section>
-    <section class="card"><h2>الحسابات</h2><div class="list" id="agList"><p class="muted">جاري التحميل…</p></div></section>`;
-  $('#af').onsubmit = ev => { ev.preventDefault(); busy($('#af button'), async () => {
-    try { const pin = $('#ag-pin').value, name = $('#ag-name').value;
-      await api('admin.addAgent', { name, phone: $('#ag-phone').value, pin });
-      msg($('#agMsg'), `انضاف ${name}. انطيه رقمه والرمز ${pin} حتى يدخل.`, 'good'); $('#af').reset(); loadAgents();
-    } catch (e) { msg($('#agMsg'), e.message); }
-  }); };
-  $('#share').value = shareLink();
-  $('#shareCopy').onclick = async () => {
-    try { await navigator.clipboard.writeText(shareLink()); msg($('#shareMsg'), 'انتسخ الرابط.', 'good'); }
-    catch (e) { $('#share').select(); msg($('#shareMsg'), 'حدد الرابط وانسخه بإيدك.', 'warn'); }
-  };
-  loadAgents();
-}
-async function loadAgents() {
-  try { A.agents = (await api('admin.overview')).agents; } catch (e) { $('#agList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
-  if (A.tab !== 'agents') return;
-  const box = $('#agList'); box.innerHTML = '';
-  A.agents.forEach(a => {
-    const el = document.createElement('div'); el.className = 'item'; el.style.flexWrap = 'wrap';
-    el.innerHTML = `<div class="grow"><div class="t">${esc(a.name)} ${a.role === 'admin' ? '<span class="chip off">مسؤول</span>' : ''} ${a.active ? '' : '<span class="chip rejected">موقوف</span>'}</div>
-      <div class="muted ltr" style="text-align:right">0${esc(a.phone)}</div></div>
-      <button class="btn sm" data-pin>رمز جديد</button>${a.role === 'admin' ? '' : `<button class="btn sm ${a.active ? 'bad' : 'ok'}" data-act>${a.active ? 'إيقاف' : 'تفعيل'}</button>`}
-      <div class="row" data-box hidden style="flex-basis:100%"><input inputmode="numeric" class="ltr" placeholder="الرمز الجديد"><button class="btn sm primary fit">حفظ</button></div><div data-m hidden style="flex-basis:100%"></div>`;
-    $('[data-pin]', el).onclick = () => { $('[data-box]', el).hidden = false; $('[data-box] input', el).focus(); };
-    $('[data-box] button', el).onclick = ev => busy(ev.target, async () => {
-      try { await api('admin.setAgent', { id: a.id, pin: $('[data-box] input', el).value }); $('[data-box]', el).hidden = true; msg($('[data-m]', el), 'تغيّر الرمز. انطيه الرمز الجديد.', 'good'); }
-      catch (e) { msg($('[data-m]', el), e.message); }
-    });
-    const act = $('[data-act]', el);
-    if (act) act.onclick = () => busy(act, async () => { try { await api('admin.setAgent', { id: a.id, active: !a.active }); loadAgents(); } catch (e) { msg($('[data-m]', el), e.message); } });
-    box.appendChild(el);
-  });
-}
-boot();
 </script>
+
 </body>
 </html>
