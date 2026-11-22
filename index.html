@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16150f">
+<title>متابعة المندوبين</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* التخطيط: عمود واحد للموبايل، شريط علوي داكن ثابت، بطاقات هادئة، والأصفر للفعل الرئيسي فقط */
+:root{
+  --bg:#f6f5ef; --surface:#ffffff; --ink:#1b1a14; --muted:#6c6959; --line:#e2dfd1;
+  --bar:#16150f; --bar-ink:#f6f5ef; --accent:#ffd400; --accent-ink:#1b1a14;
+  --ok:#1f7a45; --ok-bg:#e2f3e8; --bad:#b3261e; --bad-bg:#fbe6e4; --wait:#8a6100; --wait-bg:#fff2c9;
+  --font:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12110c; --surface:#1d1c15; --ink:#f3f1e6; --muted:#a5a18d; --line:#34322a;
+  --bar:#000; --ok:#6fd598; --ok-bg:#16301f; --bad:#ff8a80; --bad-bg:#3a1a17; --wait:#ffd76a; --wait-bg:#3a2f0c;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
+.bar{position:sticky;top:0;z-index:20;background:var(--bar);color:var(--bar-ink);
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:10px}
+.bar h1{font-size:1.05rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar button{background:none;border:1px solid #55523f;color:var(--bar-ink);border-radius:8px;padding:4px 12px;cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 96px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:1.05rem}
+.muted{color:var(--muted);font-size:.9rem}
+label{display:flex;flex-direction:column;gap:4px;font-weight:500;font-size:.95rem}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 16px;font-weight:600;cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.big{padding:16px;font-size:1.1rem;border-radius:14px}
+.btn.ok{color:var(--ok);border-color:var(--ok)}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sm{padding:6px 12px;font-size:.9rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 140px;min-width:0}
+.row>.fit{flex:0 0 auto}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.85rem}
+.chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.rejected{background:var(--bad-bg);color:var(--bad)}
+.chip.pending{background:var(--wait-bg);color:var(--wait)} .chip.off{background:var(--line);color:var(--muted)}
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .grow{flex:1;min-width:0}
+.item .t{font-weight:600;overflow-wrap:anywhere}
+.msg{border-radius:10px;padding:10px 12px;font-size:.95rem}
+.msg.err{background:var(--bad-bg);color:var(--bad)} .msg.good{background:var(--ok-bg);color:var(--ok)} .msg.warn{background:var(--wait-bg);color:var(--wait)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tabs button{flex:1 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.preview{width:100%;max-height:300px;object-fit:contain;border-radius:10px;background:var(--bg)}
+#map{height:320px;border-radius:12px;border:1px solid var(--line);z-index:1}
+.shop{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.shop:first-child{border-top:0}
+.shop img{width:120px;height:150px;object-fit:cover;border-radius:10px;background:var(--line);cursor:zoom-in}
+.shop .meta{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+@media (max-width:420px){.shop{grid-template-columns:92px 1fr}.shop img{width:92px;height:120px}}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+th{color:var(--muted);font-size:.85rem;font-weight:600}
+.scroll{overflow-x:auto}
+.overlay{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
+.overlay video,.overlay img.full{flex:1;min-height:0;width:100%;object-fit:contain}
+.overlay .foot{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));color:#fff;display:flex;gap:10px;align-items:center}
+.overlay .foot span{flex:1}
+.gps{font-size:.8rem;border:1px solid #55523f;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.gps.on{border-color:#6fd598;color:#6fd598} .gps.offl{border-color:#ff8a80;color:#ff8a80}
+.center{max-width:420px;margin:8vh auto 0}
+.ltr{direction:ltr;unicode-bidi:isolate}
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1 id="title">متابعة المندوبين</h1>
+  <span id="gps" class="gps" hidden>GPS</span>
+  <button id="logout" hidden>خروج</button>
+</header>
+<main class="wrap" id="app"><p class="muted">جاري التحميل…</p></main>
+
+<div class="overlay" id="scan" hidden>
+  <video id="video" playsinline muted></video>
+  <div class="foot"><span id="scanMsg">وجّه الكاميرا على باركود الستاند</span><button class="btn" id="scanClose">إغلاق</button></div>
+</div>
+<div class="overlay" id="zoom" hidden>
+  <img class="full" id="zoomImg" alt="صورة التوثيق">
+  <div class="foot"><span></span><button class="btn" id="zoomClose">إغلاق</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+"use strict";
+// رابط الخادم: يا تكتبه هنا، يا ينحفظ من شاشة الربط، يا يجي ويّه رابط المندوبين (#s=...)
+const FIXED_API = "";
+const $ = (s, r = document) => r.querySelector(s);
+const app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => Number(n || 0).toLocaleString('en-US');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const S = { token: store.get('token', ''), user: store.get('user', null), pos: null, queue: store.get('queue', []), timers: [] };
+const STATUS = { ok: 'مقبول', pending: 'بانتظار التدقيق', rejected: 'مرفوض' };
+const fmtTime = ts => new Date(ts).toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+const bagDay = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+function ago(ts) {
+  if (!ts) return 'ما دز موقع بعد';
+  const m = Math.round((Date.now() - new Date(ts)) / 60000);
+  if (m < 1) return 'هسه';
+  if (m < 60) return 'قبل ' + m + ' دقيقة';
+  if (m < 1440) return 'قبل ' + Math.round(m / 60) + ' ساعة';
+  return 'قبل ' + Math.round(m / 1440) + ' يوم';
+}
+
+const b64e = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64d = t => { try { return decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/')))); } catch (e) { return ''; } };
+const okApi = u => /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.test(u) || /^\/api$/.test(u);
+(function () {
+  const m = /^#s=([\w-]+)$/.exec(location.hash), fromLink = m ? b64d(m[1]) : '';
+  if (fromLink && okApi(fromLink)) store.set('api', fromLink);
+  window.API_URL = FIXED_API || store.get('api', '');
+})();
+const shareLink = () => location.href.split('#')[0] + '#s=' + b64e(window.API_URL);
+class NetError extends Error {}
+async function api(action, data = {}) {
+  let res;
+  try {
+    res = await fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, token: S.token, ...data }) });
+  } catch (e) { throw new NetError('ماكو اتصال بالإنترنت'); }
+  let j;
+  try { j = await res.json(); } catch (e) { throw new NetError('الخادم ما جاوب، حاول مرة ثانية'); }
+  if (!j.ok) {
+    if (/انتهت الجلسة|موقوف/.test(j.error || '')) { signOut(); }
+    throw new Error(j.error || 'صار خطأ');
+  }
+  return j;
+}
+function setSession(r) { S.token = r.token; S.user = r.user; store.set('token', S.token); store.set('user', S.user); }
+function signOut() {
+  S.token = ''; S.user = null; store.del('token'); store.del('user');
+  S.timers.forEach(clearInterval); S.timers = [];
+  if (S.watch != null) { navigator.geolocation.clearWatch(S.watch); S.watch = null; }
+  $('#gps').hidden = true; $('#logout').hidden = true;
+  viewLogin();
+}
+$('#logout').onclick = signOut;
+function msg(el, text, kind = 'err') { el.className = 'msg ' + kind; el.textContent = text; el.hidden = !text; }
+async function busy(btn, fn) {
+  const t = btn.textContent; btn.disabled = true; btn.textContent = 'لحظة…';
+  try { return await fn(); } finally { btn.disabled = false; btn.textContent = t; }
+}
+
+/* ================= البداية ================= */
+async function boot() {
+  if (!window.API_URL) {
+    app.innerHTML = `<form class="card center" id="f"><h2>ربط الموقع بالخادم</h2>
+      <p class="muted">هذي الخطوة للمسؤول فقط ومرة وحدة. الصق رابط Web app من Google Apps Script (ينتهي بـ /exec). إذا إنت مندوب، اطلب من المسؤول رابط المندوبين.</p>
+      <label>رابط الخادم<input id="api-url" class="ltr" required placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <div id="m" hidden></div><button class="btn primary">ربط</button></form>`;
+    $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
+      const u = $('#api-url').value.trim();
+      if (!okApi(u)) return msg($('#m'), 'الرابط لازم يبدي بـ https://script.google.com وينتهي بـ /exec');
+      window.API_URL = u;
+      try { await api('status'); store.set('api', u); boot(); }
+      catch (e) { window.API_URL = ''; msg($('#m'), 'الرابط ما جاوب. تأكد إن النشر Web app والوصول Anyone.'); }
+    }); };
+    return;
+  }
+  if (S.token && S.user) return S.user.role === 'admin' ? viewAdmin() : viewAgent();
+  try {
+    const st = await api('status');
+    st.hasAdmin ? viewLogin() : viewInit();
+  } catch (e) {
+    app.innerHTML = `<div class="card center"><div class="msg err">${esc(e.message)}</div><button class="btn" onclick="location.reload()">إعادة المحاولة</button></div>`;
+  }
+}
+function viewInit() {
+  $('#title').textContent = 'متابعة المندوبين';
+  app.innerHTML = `<form class="card center" id="f">
+    <h2>إنشاء حساب المسؤول</h2>
+    <p class="muted">هذي أول مرة ينفتح الموقع. سوّي حسابك كمسؤول، وبعدها تضيف المندوبين من لوحتك.</p>
+    <label>اسمك<input id="in-name" required autocomplete="name"></label>
+    <label>رقم موبايلك<input id="in-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
+    <label>رمز سري (4 إلى 8 أرقام)<input id="in-pin" required inputmode="numeric" type="password" minlength="4" maxlength="8"></label>
+    <div id="m" hidden></div>
+    <button class="btn primary">إنشاء الحساب</button></form>`;
+  $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
+    try { setSession(await api('init', { name: $('#in-name').value, phone: $('#in-phone').value, pin: $('#in-pin').value })); viewAdmin(); }
+    catch (e) { msg($('#m'), e.message); }
+  }); };
+}
+function viewLogin() {
+  $('#title').textContent = 'متابعة المندوبين';
+  app.innerHTML = `<form class="card center" id="f">
+    <h2>تسجيل الدخول</h2>
+    <label>رقم الموبايل<input id="lg-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX" autocomplete="username"></label>
+    <label>الرمز السري<input id="lg-pin" required inputmode="numeric" type="password" autocomplete="current-password"></label>
+    <div id="m" hidden></div>
+    <button class="btn primary">دخول</button>
+    <p class="muted">ما عندك رمز؟ اطلبه من المسؤول.</p></form>`;
+  $('#f').onsubmit = ev => { ev.preventDefault(); busy($('#f button'), async () => {
+    try { setSession(await api('login', { phone: $('#lg-phone').value, pin: $('#lg-pin').value })); boot(); }
+    catch (e) { msg($('#m'), e.message); }
+  }); };
+}
+
+/* ================= الموقع الجغرافي ================= */
+let lastSent = { t: 0, lat: 0, lng: 0 };
+function meters(a, b) {
+  const R = 6371000, r = x => x * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function gpsPill(on, text) { const g = $('#gps'); g.hidden = false; g.className = 'gps ' + (on ? 'on' : 'offl'); g.textContent = text; }
+function startTracking() {
+  if (!navigator.geolocation) return gpsPill(false, 'الموبايل ما يدعم الموقع');
+  gpsPill(false, 'جاري تحديد الموقع');
+  S.watch = navigator.geolocation.watchPosition(p => {
+    S.pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), t: Date.now() };
+    gpsPill(true, 'الموقع شغال');
+    maybePing();
+  }, err => {
+    gpsPill(false, err.code === 1 ? 'اسمح بالموقع' : 'الموقع غير متوفر');
+  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 30000 });
+  S.timers.push(setInterval(maybePing, 60000));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) maybePing(); });
+}
+async function maybePing(force) {
+  if (!S.pos || !S.token || S.user.role === 'admin') return;
+  const since = Date.now() - lastSent.t, moved = meters(lastSent, S.pos);
+  // كل 5 دقايق إذا تحرك أكثر من 40 متر، أو كل 15 دقيقة حتى لو واقف
+  if (!force && !(since > 15 * 60e3 || (since > 5 * 60e3 && moved > 40))) return;
+  lastSent = { t: Date.now(), lat: S.pos.lat, lng: S.pos.lng };
+  try { await api('ping', S.pos); } catch (e) { lastSent.t = Date.now() - 4 * 60e3; }
+}
+function freshPos() {
+  return new Promise(res => {
+    if (S.pos && Date.now() - S.pos.t < 60000) return res(S.pos);
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(p => {
+      S.pos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), t: Date.now() };
+      res(S.pos);
+    }, () => res(S.pos), { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
+}
+let wake = null;
+async function setWake(on) {
+  try {
+    if (on && navigator.wakeLock) wake = await navigator.wakeLock.request('screen');
+    else if (wake) { await wake.release(); wake = null; }
+  } catch (e) { wake = null; }
+  return !!wake;
+}
+
+/* ================= شاشة المندوب ================= */
+let draft = null;
+function viewAgent() {
+  $('#title').textContent = S.user.name;
+  $('#logout').hidden = false;
+  app.innerHTML = `
+    <div class="stats" id="stats"><div class="stat"><b>–</b><span>اليوم</span></div><div class="stat"><b>–</b><span>هذا الأسبوع</span></div><div class="stat"><b>–</b><span>هذا الشهر</span></div></div>
+    <div id="queue" hidden></div>
+    <button class="btn primary big" id="new">تسجيل محل جديد</button>
+    <section class="card" id="form" hidden></section>
+    <section class="card"><h2>آخر المحلات</h2><div class="list" id="recent"><p class="muted">جاري التحميل…</p></div></section>
+    <section class="card">
+      <h2>مشاركة الموقع</h2>
+      <p class="muted">موقعك ينرسل للمسؤول طول ما هذي الصفحة مفتوحة. إذا قفلت الموبايل أو طلعت من الصفحة يتوقف الإرسال، ويرجع من تفتحها.</p>
+      <div class="row"><button class="btn" id="here">دز موقعي هسه</button><button class="btn" id="wake">خلّي الشاشة شغالة</button></div>
+      <div id="locMsg" hidden></div>
+    </section>`;
+  $('#new').onclick = openForm;
+  $('#here').onclick = () => busy($('#here'), async () => {
+    const p = await freshPos();
+    if (!p) return msg($('#locMsg'), 'ما كدرنا نحدد موقعك. فعّل الموقع (GPS) واسمح للمتصفح.');
+    await maybePing(true); msg($('#locMsg'), 'انرسل موقعك للمسؤول.', 'good');
+  });
+  $('#wake').onclick = async () => {
+    const on = await setWake(!wake);
+    $('#wake').textContent = on ? 'الشاشة تبقى شغالة ✓' : 'خلّي الشاشة شغالة';
+    if (!on && !navigator.wakeLock) msg($('#locMsg'), 'هذا المتصفح ما يدعم إبقاء الشاشة شغالة.', 'warn');
+  };
+  startTracking();
+  loadMe(); flushQueue();
+  S.timers.push(setInterval(flushQueue, 60000));
+  window.addEventListener('online', flushQueue);
+}
+async function loadMe() {
+  try {
+    const r = await api('me');
+    const live = r.month.ok + r.month.pending;
+    $('#stats').innerHTML = `
+      <div class="stat"><b>${num(r.today)}</b><span>اليوم</span></div>
+      <div class="stat"><b>${num(r.week)}</b><span>الأسبوع من ${r.weekTarget}</span></div>
+      <div class="stat"><b>${num(live)}</b><span>الشهر (${num(r.month.ok)} مقبول)</span></div>`;
+    $('#recent').innerHTML = r.recent.length ? r.recent.map(s => `<div class="item"><div class="grow">
+        <div class="t">${esc(s.shopName)}</div>
+        <div class="muted"><span class="ltr">${esc(s.serial)}</span> · ${fmtTime(s.ts)}</div>
+        ${s.status === 'rejected' && s.note ? `<div class="muted">سبب الرفض: ${esc(s.note)}</div>` : ''}
+      </div><span class="chip ${s.status}">${STATUS[s.status] || s.status}</span></div>`).join('')
+      : '<p class="muted">بعد ما سجّلت أي محل. اضغط "تسجيل محل جديد" وابدأ.</p>';
+  } catch (e) { if (S.token) $('#recent').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+}
+function renderQueue() {
+  const q = $('#queue'); if (!q) return;
+  q.hidden = !S.queue.length && !S.lastQueueError;
+  q.className = 'msg ' + (S.lastQueueError ? 'err' : 'warn');
+  q.textContent = S.lastQueueError ? 'محل محفوظ ما انقبل من الخادم: ' + S.lastQueueError
+    : S.queue.length ? `${S.queue.length} محل محفوظ بالموبايل وينتظر الإنترنت. لا تمسح بيانات المتصفح.` : '';
+}
+async function flushQueue() {
+  renderQueue();
+  if (S.flushing || !S.queue.length || !S.token) return;
+  S.flushing = true;
+  let sent = false;
+  while (S.queue.length) {
+    try { await api('addShop', S.queue[0]); sent = true; }
+    catch (e) { if (e instanceof NetError) break; S.lastQueueError = e.message; }
+    S.queue.shift(); store.set('queue', S.queue);
+  }
+  S.flushing = false; renderQueue();
+  if (sent) loadMe();
+}
+
+function openForm() {
+  draft = { qr: '', photo: '' };
+  $('#new').hidden = true;
+  const f = $('#form'); f.hidden = false;
+  f.innerHTML = `<h2>محل جديد</h2>
+    <label>اسم المحل (مثل ما مكتوب بسوبر كي)<input id="sh-name" autocomplete="off"></label>
+    <div class="row"><button class="btn" id="sh-scan" type="button">مسح باركود الستاند</button></div>
+    <div id="sh-code" hidden></div>
+    <label>الرقم التسلسلي فوق الباركود<input id="sh-serial" class="ltr" placeholder="uvb-325199" autocapitalize="off" autocomplete="off"></label>
+    <label class="btn" style="align-items:center">صوّر صورة التوثيق
+      <input id="sh-photo" type="file" accept="image/*" capture="environment" hidden></label>
+    <p class="muted">موبايل صاحب المحل بوضع "أعمال" جنب الستاند، والرقم التسلسلي واضح.</p>
+    <img id="sh-prev" class="preview" alt="صورة التوثيق" hidden>
+    <div id="sh-msg" hidden></div>
+    <div class="row"><button class="btn primary" id="sh-save" type="button">حفظ المحل</button><button class="btn fit" id="sh-cancel" type="button">إلغاء</button></div>`;
+  $('#sh-cancel').onclick = closeForm;
+  $('#sh-scan').onclick = openScanner;
+  $('#sh-serial').onchange = checkCode;
+  $('#sh-photo').onchange = onPhoto;
+  $('#sh-save').onclick = () => busy($('#sh-save'), saveShop);
+  f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function closeForm() { $('#form').hidden = true; $('#form').innerHTML = ''; $('#new').hidden = false; draft = null; }
+async function checkCode() {
+  const serial = $('#sh-serial').value.trim(), box = $('#sh-code');
+  if (!serial) return;
+  try {
+    const r = await api('checkCode', { serial });
+    if (!draft) return;
+    if (r.dup) msg(box, `هذا الستاند مسجّل من قبل: ${r.dup.shopName}، ${r.dup.agentName}، ${r.dup.day}`, 'err');
+    else msg(box, (draft.qr ? 'الباركود ينقري وهو جديد، ما مسجّل من قبل.' : 'الرقم التسلسلي جديد، ما مسجّل من قبل.'), 'good');
+  } catch (e) { if (draft && draft.qr) msg(box, 'الباركود ينقري. ما كدرنا نتأكد إذا مسجّل من قبل (ماكو إنترنت).', 'warn'); }
+}
+function loadImage(file) {
+  return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); });
+}
+async function onPhoto(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  try {
+    const img = await loadImage(file), max = 1100, k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(img, 0, 0, c.width, c.height);
+    draft.photo = c.toDataURL('image/jpeg', 0.6);
+    $('#sh-prev').src = draft.photo; $('#sh-prev').hidden = false;
+    if (!draft.qr && window.jsQR) {
+      const d = ctx.getImageData(0, 0, c.width, c.height), hit = jsQR(d.data, d.width, d.height);
+      if (hit && hit.data) { draft.qr = hit.data; if ($('#sh-serial').value.trim()) checkCode(); else msg($('#sh-code'), 'الباركود ينقري من الصورة. اكتب الرقم التسلسلي.', 'good'); }
+    }
+  } catch (e) { msg($('#sh-msg'), 'ما كدرنا نقرا الصورة، صوّر مرة ثانية.'); }
+}
+async function saveShop() {
+  const m = $('#sh-msg'), shopName = $('#sh-name').value.trim(), serial = $('#sh-serial').value.trim();
+  if (!shopName) return msg(m, 'اكتب اسم المحل.');
+  if (!serial) return msg(m, 'اكتب الرقم التسلسلي للستاند، أو امسح الباركود.');
+  if (!draft.photo) return msg(m, 'صوّر صورة التوثيق.');
+  const p = await freshPos();
+  const data = { shopName, serial, qr: draft.qr, photo: draft.photo, lat: p ? p.lat : '', lng: p ? p.lng : '', acc: p ? p.acc : '' };
+  try {
+    await api('addShop', data);
+    closeForm(); loadMe(); maybePing(true);
+  } catch (e) {
+    if (!(e instanceof NetError)) return msg(m, e.message);
+    S.queue.push(data);
+    if (!store.set('queue', S.queue)) { S.queue.pop(); return msg(m, 'ماكو إنترنت وذاكرة الموبايل ممتلية. انتظر الإنترنت وحاول.'); }
+    closeForm(); renderQueue();
+  }
+}
+
+/* ---------- مسح الباركود بالكاميرا ---------- */
+let scanStream = null, scanOn = false;
+async function openScanner() {
+  const box = $('#sh-code');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return msg(box, 'المتصفح ما يفتح الكاميرا. اكتب الرقم التسلسلي بإيدك، والباركود ينقري من صورة التوثيق.', 'warn');
+  try { scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false }); }
+  catch (e) { return msg(box, 'ما انفتحت الكاميرا. اسمح للمتصفح بالكاميرا، أو اكتب الرقم التسلسلي بإيدك.', 'warn'); }
+  const v = $('#video'); v.srcObject = scanStream; await v.play();
+  $('#scan').hidden = false; scanOn = true; $('#scanMsg').textContent = 'وجّه الكاميرا على باركود الستاند';
+  let det = null;
+  if ('BarcodeDetector' in window) {
+    try {
+      const sup = await BarcodeDetector.getSupportedFormats();
+      const want = ['qr_code', 'code_128', 'code_39', 'code_93'].filter(f => sup.includes(f));
+      if (want.includes('qr_code')) det = new BarcodeDetector({ formats: want });
+    } catch (e) { det = null; }
+  }
+  const c = document.createElement('canvas'), ctx = c.getContext('2d', { willReadFrequently: true });
+  let qr = '', serial = '', qrAt = 0;
+  const tick = async () => {
+    if (!scanOn) return;
+    if (v.readyState >= 2 && v.videoWidth) {
+      try {
+        if (det) {
+          for (const b of await det.detect(v)) {
+            if (b.format === 'qr_code') qr = qr || b.rawValue; else if (b.rawValue) serial = serial || b.rawValue;
+          }
+        } else if (window.jsQR) {
+          const k = Math.min(1, 720 / v.videoWidth); c.width = v.videoWidth * k; c.height = v.videoHeight * k;
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+          const d = ctx.getImageData(0, 0, c.width, c.height), hit = jsQR(d.data, d.width, d.height);
+          if (hit && hit.data) qr = hit.data;
+        }
+      } catch (e) {}
+      if (qr && !qrAt) { qrAt = Date.now(); $('#scanMsg').textContent = 'انقرا الباركود ✓'; if (navigator.vibrate) navigator.vibrate(80); }
+      // بعد قراءة QR ننتظر ثانيتين للرقم التسلسلي (الباركود الخطي) إذا المتصفح يدعمه
+      if (qr && (serial || !det || Date.now() - qrAt > 2000)) return finishScan(qr, serial);
+    }
+    setTimeout(tick, 150);
+  };
+  tick();
+}
+function closeScanner() {
+  scanOn = false; $('#scan').hidden = true;
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+}
+$('#scanClose').onclick = closeScanner;
+function finishScan(qr, serial) {
+  closeScanner();
+  if (!draft) return;
+  draft.qr = qr;
+  const inp = $('#sh-serial');
+  if (serial && !inp.value.trim()) inp.value = serial;
+  if (inp.value.trim()) checkCode();
+  else { msg($('#sh-code'), 'الباركود ينقري. اكتب الرقم التسلسلي المكتوب فوقه.', 'good'); inp.focus(); }
+}
+$('#zoomClose').onclick = () => { $('#zoom').hidden = true; };
+
+/* ================= لوحة المسؤول ================= */
+const A = { tab: 'now', agents: [], photos: new Map(), map: null, layer: null, filt: { day: '', agentId: '', status: 'pending' }, offset: 0 };
+function viewAdmin() {
+  $('#title').textContent = 'لوحة المسؤول';
+  $('#logout').hidden = false;
+  app.innerHTML = `<div class="tabs" role="tablist">
+      <button data-t="now">الآن</button><button data-t="shops">المحلات</button><button data-t="month">عد الشهر</button><button data-t="agents">المندوبين</button>
+    </div><div id="pane" style="display:flex;flex-direction:column;gap:16px"></div>`;
+  app.querySelectorAll('.tabs button').forEach(b => b.onclick = () => adminTab(b.dataset.t));
+  S.timers.push(setInterval(() => { if (A.tab === 'now' && !document.hidden) loadNow(true); }, 60000));
+  adminTab('now');
+}
+function adminTab(t) {
+  A.tab = t; A.map = null;
+  app.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
+  ({ now: tabNow, shops: tabShops, month: tabMonth, agents: tabAgents })[t]();
+}
+const pane = () => $('#pane');
+function paneError(e) { pane().innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+
+/* ---- الآن ---- */
+function tabNow() {
+  pane().innerHTML = `<section class="card"><h2>مواقع المندوبين</h2><div id="map"></div>
+      <p class="muted" id="mapNote">النقاط الصفراء محلات اليوم. اضغط على اسم مندوب حتى تشوف مساره اليوم.</p></section>
+    <section class="card"><h2>شغل اليوم</h2><div class="list" id="nowList"><p class="muted">جاري التحميل…</p></div></section>`;
+  loadNow();
+}
+async function loadNow(quiet) {
+  let r;
+  try { r = await api('admin.overview'); } catch (e) { if (!quiet) paneError(e); return; }
+  if (A.tab !== 'now') return;
+  A.agents = r.agents;
+  const agents = r.agents.filter(a => a.role !== 'admin' && a.active).sort((x, y) => y.today - x.today);
+  $('#nowList').innerHTML = agents.length ? agents.map(a => `<div class="item"><div class="grow">
+      <div class="t"><a href="#" data-track="${esc(a.id)}">${esc(a.name)}</a></div>
+      <div class="muted">${a.lastLat != null ? 'آخر موقع ' + ago(a.lastAt) : 'ما دز موقع بعد'} · الشهر ${num(a.month)}${a.pending ? ' · ' + num(a.pending) + ' بانتظار تدقيقك' : ''}</div>
+      </div>${a.lastLat != null ? `<a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${a.lastLat},${a.lastLng}">خرائط</a>` : ''}
+      <b style="font-size:1.4rem;font-variant-numeric:tabular-nums">${num(a.today)}</b></div>`).join('')
+    : '<p class="muted">ماكو مندوبين بعد. أضفهم من تبويب "المندوبين".</p>';
+  $('#nowList').querySelectorAll('[data-track]').forEach(l => l.onclick = ev => { ev.preventDefault(); showTrack(l.dataset.track); });
+  drawMap(agents, r.points);
+}
+function drawMap(agents, points) {
+  if (!window.L) { $('#map').hidden = true; $('#mapNote').textContent = 'الخريطة ما حمّلت. استخدم زر "خرائط" يم كل مندوب.'; return; }
+  if (!A.map) {
+    A.map = L.map('map').setView([33.3, 44.4], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(A.map);
+    A.layer = L.layerGroup().addTo(A.map); A.fitted = false;
+  }
+  A.layer.clearLayers();
+  const b = [];
+  points.forEach(p => { L.circleMarker([p.lat, p.lng], { radius: 5, color: '#8a6100', fillColor: '#ffd400', fillOpacity: 1, weight: 1 }).bindPopup(`${esc(p.shopName)}<br>${esc(p.agentName)}`).addTo(A.layer); b.push([p.lat, p.lng]); });
+  agents.forEach(a => { if (a.lastLat == null) return;
+    L.circleMarker([a.lastLat, a.lastLng], { radius: 9, color: '#fff', fillColor: '#1b1a14', fillOpacity: 1, weight: 2 }).bindTooltip(a.name, { permanent: true, direction: 'top' }).bindPopup(`${esc(a.name)}<br>${ago(a.lastAt)}`).addTo(A.layer);
+    b.push([a.lastLat, a.lastLng]); });
+  if (b.length && !A.fitted) { A.map.fitBounds(b, { padding: [30, 30], maxZoom: 16 }); A.fitted = true; }
+}
+async function showTrack(agentId) {
+  if (!A.map) return;
+  try {
+    const r = await api('admin.track', { agentId });
+    if (A.line) A.map.removeLayer(A.line);
+    const pts = r.points.map(p => [p.lat, p.lng]);
+    if (pts.length < 2) { $('#mapNote').textContent = 'ماكو مسار كافي لهذا المندوب اليوم.'; return; }
+    A.line = L.polyline(pts, { color: '#b3261e', weight: 3 }).addTo(A.map);
+    A.map.fitBounds(A.line.getBounds(), { padding: [30, 30] });
+    $('#mapNote').textContent = `المسار: ${pts.length} نقطة، من ${fmtTime(r.points[0].ts)} إلى ${fmtTime(r.points[pts.length - 1].ts)}.`;
+    $('#map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (e) { $('#mapNote').textContent = e.message; }
+}
+
+/* ---- المحلات ---- */
+async function ensureAgents() { if (!A.agents.length) A.agents = (await api('admin.overview')).agents; }
+async function tabShops() {
+  pane().innerHTML = '<p class="muted">جاري التحميل…</p>';
+  try { await ensureAgents(); } catch (e) { return paneError(e); }
+  if (A.tab !== 'shops') return;
+  if (!A.filt.month) A.filt.month = bagDay().slice(0, 7);
+  pane().innerHTML = `<section class="card"><div class="row">
+      <label>الشهر<input type="month" id="fl-month" value="${A.filt.month}"></label>
+      <label>اليوم<input type="date" id="fl-day" value="${A.filt.day}"></label>
+      <label>المندوب<select id="fl-agent"><option value="">الكل</option>${A.agents.map(a => `<option value="${esc(a.id)}"${a.id === A.filt.agentId ? ' selected' : ''}>${esc(a.name)}</option>`).join('')}</select></label>
+      <label>الحالة<select id="fl-status"><option value="">الكل</option>${Object.keys(STATUS).map(k => `<option value="${k}"${k === A.filt.status ? ' selected' : ''}>${STATUS[k]}</option>`).join('')}</select></label>
+    </div><p class="muted" id="shopCount"></p></section>
+    <section class="card"><div id="shopList"></div><button class="btn" id="more" hidden>عرض أكثر</button></section>`;
+  const upd = () => { A.filt = { month: $('#fl-month').value, day: $('#fl-day').value, agentId: $('#fl-agent').value, status: $('#fl-status').value };
+    if (A.filt.day) { A.filt.month = A.filt.day.slice(0, 7); $('#fl-month').value = A.filt.month; } loadShops(true); };
+  ['#fl-month', '#fl-day', '#fl-agent', '#fl-status'].forEach(s => $(s).onchange = upd);
+  $('#more').onclick = () => loadShops(false);
+  loadShops(true);
+}
+const photoObs = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { photoObs.unobserve(e.target); loadPhoto(e.target); } }), { rootMargin: '300px' }) : null;
+async function loadPhoto(img) {
+  const id = img.dataset.pid; if (!id) return;
+  try {
+    if (!A.photos.has(id)) A.photos.set(id, (await api('admin.photo', { photoId: id })).data);
+    img.src = A.photos.get(id);
+  } catch (e) { img.alt = 'ما تحمّلت الصورة'; }
+}
+async function loadShops(reset) {
+  if (reset) { A.offset = 0; $('#shopList').innerHTML = '<p class="muted">جاري التحميل…</p>'; }
+  let r;
+  try { r = await api('admin.shops', { ...A.filt, offset: A.offset }); } catch (e) { $('#shopList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  if (A.tab !== 'shops') return;
+  if (reset) $('#shopList').innerHTML = '';
+  $('#shopCount').textContent = `${num(r.total)} محل`;
+  if (!r.total) $('#shopList').innerHTML = '<p class="muted">ماكو محلات بهذا الفلتر.</p>';
+  const month = A.filt.month;
+  r.shops.forEach(s => {
+    const el = document.createElement('div'); el.className = 'shop';
+    el.innerHTML = `<img data-pid="${esc(s.photoId)}" alt="صورة التوثيق" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+      <div class="meta"><div class="t" style="font-weight:600">${esc(s.shopName)}</div>
+      <div><span class="ltr">${esc(s.serial)}</span> <span class="chip ${esc(s.status)}" data-chip>${STATUS[s.status] || esc(s.status)}</span></div>
+      <div class="muted">${esc(s.agentName)} · ${fmtTime(s.ts)}</div>
+      <div class="muted">${s.lat != null ? `<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${s.lat},${s.lng}">موقع التسجيل</a>` : '<span class="chip rejected">بدون موقع</span>'}
+        · ${s.qr ? 'الباركود مقري' : '<span class="chip pending">الباركود ما انمسح</span>'}</div>
+      <div class="muted" data-note>${esc(s.note)}</div>
+      <div class="row"><button class="btn sm ok">قبول</button><button class="btn sm bad">رفض</button></div>
+      <div class="row" data-rej hidden><input placeholder="سبب الرفض (يشوفه المندوب)"><button class="btn sm bad fit">تأكيد الرفض</button></div></div>`;
+    const img = $('img', el); img.onclick = () => { if (A.photos.has(s.photoId)) { $('#zoomImg').src = A.photos.get(s.photoId); $('#zoom').hidden = false; } };
+    photoObs ? photoObs.observe(img) : loadPhoto(img);
+    const set = async (btn, status, note) => busy(btn, async () => {
+      try { await api('admin.review', { month, id: s.id, status, note });
+        const c = $('[data-chip]', el); c.className = 'chip ' + status; c.textContent = STATUS[status]; $('[data-note]', el).textContent = note || ''; $('[data-rej]', el).hidden = true;
+      } catch (e) { $('[data-note]', el).textContent = e.message; }
+    });
+    const [okB, badB] = el.querySelectorAll('.row:not([data-rej]) button');
+    okB.onclick = () => set(okB, 'ok', '');
+    badB.onclick = () => { $('[data-rej]', el).hidden = false; $('[data-rej] input', el).focus(); };
+    $('[data-rej] button', el).onclick = ev => set(ev.target, 'rejected', $('[data-rej] input', el).value.trim() || 'الصورة غير مقبولة');
+    $('#shopList').appendChild(el);
+  });
+  A.offset += r.shops.length;
+  $('#more').hidden = A.offset >= r.total;
+}
+
+/* ---- عد الشهر ---- */
+function tabMonth() {
+  const m = A.month || bagDay().slice(0, 7);
+  pane().innerHTML = `<section class="card"><div class="row"><label>الشهر<input type="month" id="mo" value="${m}"></label><button class="btn fit" id="copy">نسخ الجدول</button></div>
+    <p class="muted">الأجر ينحسب على المحلات المقبولة فقط: 1,000 دينار للمحل، و1,250 لكل محل فوق 672.</p>
+    <div class="scroll" id="moTable"><p class="muted">جاري التحميل…</p></div><div id="moMsg" hidden></div></section>`;
+  $('#mo').onchange = () => { A.month = $('#mo').value; loadMonth(); };
+  $('#copy').onclick = async () => {
+    try { await navigator.clipboard.writeText(A.monthText || ''); msg($('#moMsg'), 'انتسخ الجدول.', 'good'); }
+    catch (e) { msg($('#moMsg'), 'ما كدرنا ننسخ. حدد الجدول وانسخه بإيدك.', 'warn'); }
+  };
+  loadMonth();
+}
+async function loadMonth() {
+  let r;
+  try { r = await api('admin.month', { month: $('#mo').value }); } catch (e) { $('#moTable').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  if (A.tab !== 'month') return;
+  const sum = k => r.rows.reduce((t, x) => t + x[k], 0);
+  $('#moTable').innerHTML = r.rows.length ? `<table><thead><tr><th>المندوب</th><th>مقبول</th><th>بانتظار</th><th>مرفوض</th><th>الأجر (دينار)</th></tr></thead><tbody>
+    ${r.rows.map(x => `<tr><td>${esc(x.name)}</td><td><b>${num(x.ok)}</b></td><td>${num(x.pending)}</td><td>${num(x.rejected)}</td><td><b>${num(x.pay)}</b></td></tr>`).join('')}
+    <tr><th>المجموع</th><th>${num(sum('ok'))}</th><th>${num(sum('pending'))}</th><th>${num(sum('rejected'))}</th><th>${num(sum('pay'))}</th></tr></tbody></table>
+    ${sum('pending') ? `<p class="msg warn">بعد ${num(sum('pending'))} محل بانتظار تدقيقك. دققها قبل ما تعتمد الأجور.</p>` : ''}`
+    : '<p class="muted">ماكو مندوبين بعد.</p>';
+  A.monthText = `عد شهر ${r.month}\n` + r.rows.map(x => `${x.name}: ${x.ok} مقبول، ${x.pending} بانتظار، ${x.rejected} مرفوض، الأجر ${num(x.pay)} دينار`).join('\n') + `\nالمجموع: ${sum('ok')} محل، ${num(sum('pay'))} دينار`;
+}
+
+/* ---- المندوبين ---- */
+async function tabAgents() {
+  pane().innerHTML = `<form class="card" id="af"><h2>إضافة مندوب</h2><div class="row">
+      <label>الاسم<input id="ag-name" required></label>
+      <label>رقم الموبايل<input id="ag-phone" required inputmode="tel" class="ltr" placeholder="07XXXXXXXXX"></label>
+      <label>الرمز السري<input id="ag-pin" required inputmode="numeric" minlength="4" maxlength="8" class="ltr" placeholder="4 أرقام"></label></div>
+      <div id="agMsg" hidden></div><button class="btn primary">إضافة</button></form>
+    <section class="card"><h2>رابط المندوبين</h2><p class="muted">دز هذا الرابط لكل مندوب ويّه رمزه. يفتحه بموبايله ويدخل مباشرة.</p>
+      <input id="share" class="ltr" readonly><button class="btn" id="shareCopy" type="button">نسخ الرابط</button><div id="shareMsg" hidden></div></section>
+    <section class="card"><h2>الحسابات</h2><div class="list" id="agList"><p class="muted">جاري التحميل…</p></div></section>`;
+  $('#af').onsubmit = ev => { ev.preventDefault(); busy($('#af button'), async () => {
+    try { const pin = $('#ag-pin').value, name = $('#ag-name').value;
+      await api('admin.addAgent', { name, phone: $('#ag-phone').value, pin });
+      msg($('#agMsg'), `انضاف ${name}. انطيه رقمه والرمز ${pin} حتى يدخل.`, 'good'); $('#af').reset(); loadAgents();
+    } catch (e) { msg($('#agMsg'), e.message); }
+  }); };
+  $('#share').value = shareLink();
+  $('#shareCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(shareLink()); msg($('#shareMsg'), 'انتسخ الرابط.', 'good'); }
+    catch (e) { $('#share').select(); msg($('#shareMsg'), 'حدد الرابط وانسخه بإيدك.', 'warn'); }
+  };
+  loadAgents();
+}
+async function loadAgents() {
+  try { A.agents = (await api('admin.overview')).agents; } catch (e) { $('#agList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  if (A.tab !== 'agents') return;
+  const box = $('#agList'); box.innerHTML = '';
+  A.agents.forEach(a => {
+    const el = document.createElement('div'); el.className = 'item'; el.style.flexWrap = 'wrap';
+    el.innerHTML = `<div class="grow"><div class="t">${esc(a.name)} ${a.role === 'admin' ? '<span class="chip off">مسؤول</span>' : ''} ${a.active ? '' : '<span class="chip rejected">موقوف</span>'}</div>
+      <div class="muted ltr" style="text-align:right">0${esc(a.phone)}</div></div>
+      <button class="btn sm" data-pin>رمز جديد</button>${a.role === 'admin' ? '' : `<button class="btn sm ${a.active ? 'bad' : 'ok'}" data-act>${a.active ? 'إيقاف' : 'تفعيل'}</button>`}
+      <div class="row" data-box hidden style="flex-basis:100%"><input inputmode="numeric" class="ltr" placeholder="الرمز الجديد"><button class="btn sm primary fit">حفظ</button></div><div data-m hidden style="flex-basis:100%"></div>`;
+    $('[data-pin]', el).onclick = () => { $('[data-box]', el).hidden = false; $('[data-box] input', el).focus(); };
+    $('[data-box] button', el).onclick = ev => busy(ev.target, async () => {
+      try { await api('admin.setAgent', { id: a.id, pin: $('[data-box] input', el).value }); $('[data-box]', el).hidden = true; msg($('[data-m]', el), 'تغيّر الرمز. انطيه الرمز الجديد.', 'good'); }
+      catch (e) { msg($('[data-m]', el), e.message); }
+    });
+    const act = $('[data-act]', el);
+    if (act) act.onclick = () => busy(act, async () => { try { await api('admin.setAgent', { id: a.id, active: !a.active }); loadAgents(); } catch (e) { msg($('[data-m]', el), e.message); } });
+    box.appendChild(el);
+  });
+}
+boot();
+</script>
+</body>
+</html>
